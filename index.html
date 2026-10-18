@@ -28,7 +28,7 @@
         .nav-right { display: flex; gap: 12px; align-items: center; }
         .pill { padding: 6px 16px; border-radius: 20px; background: var(--panel); border: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
         .pill.active { color: var(--text); }
-        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; padding-bottom: 80px; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; padding-bottom: 100px; }
         
         h1 { font-size: 36px; margin: 0 0 10px 0; }
         h1 span { color: var(--text-muted); }
@@ -66,8 +66,8 @@
         th { color: var(--text-muted); font-weight: 600; }
         .hidden { display: none !important; }
         
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
         .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
@@ -89,9 +89,15 @@
         }
         #key-bar.on { display: flex; }
         .key-bar-text { font-family: monospace; font-size: 16px; color: var(--accent); background: var(--bg); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); }
+        
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--panel); border: 1px solid var(--border); padding: 15px 25px; border-radius: 12px; color: var(--text); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body data-theme="dark">
+
+    <div id="toast-container"></div>
 
     <div id="auth-view">
         <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Keys</div>
@@ -239,7 +245,7 @@
 
     <!-- Gift Modal -->
     <div class="modal" id="gift-modal">
-        <div class="modal-content" style="text-align: center;">
+        <div class="modal-content">
             <div style="font-size: 48px; margin-bottom: 20px;">🎁</div>
             <h2 style="margin-top: 0;">Gift Received!</h2>
             <p id="gift-text" style="color: var(--text-muted); margin-bottom: 20px;">You have been gifted time by the Admin.</p>
@@ -249,7 +255,7 @@
 
     <!-- Key Modal -->
     <div class="modal" id="key-modal">
-        <div class="modal-content" style="text-align: center;">
+        <div class="modal-content">
             <h2 style="margin-top: 0;">Your Key</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">Copy this key and paste it into the Axon injector.</p>
             <div class="key-bar-text" id="key-text" style="margin-bottom: 20px; font-size: 20px;"></div>
@@ -280,6 +286,16 @@
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
         document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
+
+        // Custom Toast Notification System
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
         window.onload = async () => {
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
@@ -320,15 +336,15 @@
                 if (currentUser) {
                     refreshTime();
                     showCountdownPopup();
-                    showKeyModal(); // Show the key popup
+                    showKeyModal();
                 }
             } else if (params.get('success') === 'step_completed') {
                 window.history.replaceState({}, document.title, "/");
-                alert('Ad step completed! Complete more steps to unlock time.');
-                loadUserPlanStatus(); // Refresh progress
+                showToast('Ad step completed! Complete more steps to unlock time.');
+                loadUserPlanStatus();
             } else if (params.get('success') === 'error') {
                 window.history.replaceState({}, document.title, "/");
-                alert('Ad verification failed. Make sure you complete the full ad.');
+                showToast('Ad verification failed. Make sure you complete the full ad.');
             }
         }
 
@@ -336,14 +352,13 @@
             document.getElementById('key-text').innerText = currentUser;
             document.getElementById('key-modal').style.display = 'flex';
             
-            // Show floating bar
             document.getElementById('floating-key').innerText = currentUser;
             document.getElementById('key-bar').classList.add('on');
         }
 
         function copyKey() {
             navigator.clipboard.writeText(currentUser);
-            alert('Key copied to clipboard!');
+            showToast('Key copied to clipboard!');
         }
 
         function checkGiftNotification(giftText) {
@@ -477,12 +492,6 @@
 
             await loadUserPlanStatus();
             refreshTime();
-
-            // Show floating bar if user has time
-            if (localStorage.getItem('axon_show_key') === 'true') {
-                document.getElementById('floating-key').innerText = currentUser;
-                document.getElementById('key-bar').classList.add('on');
-            }
         }
 
         async function loadUserPlanStatus() {
@@ -541,7 +550,7 @@
 
         async function startPlan(planId) {
             if (userActivePlanId && userActivePlanId !== planId) {
-                return alert('You already have an active plan. Finish it first.');
+                return showToast('You already have an active plan. Finish it first.');
             }
 
             const res = await fetch(API_URL + '/user/start-plan', {
@@ -551,7 +560,7 @@
             });
             const data = await res.json();
             
-            if (data.error) return alert(data.error);
+            if (data.error) return showToast(data.error);
             
             window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
@@ -580,8 +589,6 @@
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
 
-                // Show floating key bar if time is active
-                localStorage.setItem('axon_show_key', 'true');
                 document.getElementById('floating-key').innerText = currentUser;
                 document.getElementById('key-bar').classList.add('on');
 
@@ -591,8 +598,6 @@
                 document.getElementById('balance-badge').innerText = 'Empty';
                 document.getElementById('balance-time').innerText = '0m';
 
-                // Hide floating key bar if no time
-                localStorage.removeItem('axon_show_key');
                 document.getElementById('key-bar').classList.remove('on');
             }
         }
@@ -603,7 +608,7 @@
         async function changePassword() {
             const oldPass = document.getElementById('old-pass').value;
             const newPass = document.getElementById('new-pass').value;
-            if (!oldPass || !newPass) return alert('Fill fields');
+            if (!oldPass || !newPass) return showToast('Fill fields');
 
             const res = await fetch(API_URL + '/change-password', {
                 method: 'POST',
@@ -612,10 +617,10 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert('Password changed!');
+                showToast('Password changed!');
                 closeModal('change-pass-modal');
             } else {
-                alert(data.error);
+                showToast(data.error);
             }
         }
 
@@ -629,9 +634,9 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert('HWID reset! You can now log in on a new PC.');
+                showToast('HWID reset! You can now log in on a new PC.');
             } else {
-                alert(data.error);
+                showToast(data.error);
             }
         }
 
@@ -640,7 +645,7 @@
             const name = document.getElementById('plan-name').value;
             const gateways = document.getElementById('plan-gateways').value;
             const days = document.getElementById('plan-days').value;
-            if (!name || !gateways || !days) return alert('Fill all fields');
+            if (!name || !gateways || !days) return showToast('Fill all fields');
 
             const res = await fetch(API_URL + '/admin/create-plan', {
                 method: 'POST',
@@ -649,7 +654,7 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert('Plan created!');
+                showToast('Plan created!');
                 loadAdminUsers();
             }
         }
@@ -729,7 +734,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: email, days: parseInt(days) })
             });
-            if (res.ok) { alert(`Time given to ${email}`); loadAdminUsers(); }
+            if (res.ok) { showToast(`Time given to ${email}`); loadAdminUsers(); }
         }
 
         async function removeUser(email) {
@@ -748,7 +753,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: email })
             });
-            alert(`HWID reset for ${email}`);
+            showToast(`HWID reset for ${email}`);
             loadAdminUsers();
         }
 
