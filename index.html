@@ -28,7 +28,7 @@
         .nav-right { display: flex; gap: 12px; align-items: center; }
         .pill { padding: 6px 16px; border-radius: 20px; background: var(--panel); border: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
         .pill.active { color: var(--text); }
-        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; padding-bottom: 80px; }
         
         h1 { font-size: 36px; margin: 0 0 10px 0; }
         h1 span { color: var(--text-muted); }
@@ -79,6 +79,16 @@
         .time-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px 20px; min-width: 70px; }
         .time-block span { display: block; font-size: 32px; font-weight: 900; font-family: monospace; color: var(--accent); }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
+
+        /* Floating Key Bar */
+        #key-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--panel); border-top: 1px solid var(--border);
+            padding: 15px 20px; display: none; justify-content: center; align-items: center; gap: 15px;
+            z-index: 500;
+        }
+        #key-bar.on { display: flex; }
+        .key-bar-text { font-family: monospace; font-size: 16px; color: var(--accent); background: var(--bg); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); }
     </style>
 </head>
 <body data-theme="dark">
@@ -237,6 +247,24 @@
         </div>
     </div>
 
+    <!-- Key Modal -->
+    <div class="modal" id="key-modal">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="margin-top: 0;">Your Key</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Copy this key and paste it into the Axon injector.</p>
+            <div class="key-bar-text" id="key-text" style="margin-bottom: 20px; font-size: 20px;"></div>
+            <button class="btn" onclick="copyKey()">Copy Key</button>
+            <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px;" onclick="closeModal('key-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Floating Key Bar -->
+    <div id="key-bar">
+        <span style="font-size: 12px; color: var(--text-muted);">Your Key:</span>
+        <span class="key-bar-text" id="floating-key"></span>
+        <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="copyKey()">Copy</button>
+    </div>
+
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
@@ -292,11 +320,30 @@
                 if (currentUser) {
                     refreshTime();
                     showCountdownPopup();
+                    showKeyModal(); // Show the key popup
                 }
             } else if (params.get('success') === 'step_completed') {
                 window.history.replaceState({}, document.title, "/");
                 alert('Ad step completed! Complete more steps to unlock time.');
+                loadUserPlanStatus(); // Refresh progress
+            } else if (params.get('success') === 'error') {
+                window.history.replaceState({}, document.title, "/");
+                alert('Ad verification failed. Make sure you complete the full ad.');
             }
+        }
+
+        function showKeyModal() {
+            document.getElementById('key-text').innerText = currentUser;
+            document.getElementById('key-modal').style.display = 'flex';
+            
+            // Show floating bar
+            document.getElementById('floating-key').innerText = currentUser;
+            document.getElementById('key-bar').classList.add('on');
+        }
+
+        function copyKey() {
+            navigator.clipboard.writeText(currentUser);
+            alert('Key copied to clipboard!');
         }
 
         function checkGiftNotification(giftText) {
@@ -430,6 +477,12 @@
 
             await loadUserPlanStatus();
             refreshTime();
+
+            // Show floating bar if user has time
+            if (localStorage.getItem('axon_show_key') === 'true') {
+                document.getElementById('floating-key').innerText = currentUser;
+                document.getElementById('key-bar').classList.add('on');
+            }
         }
 
         async function loadUserPlanStatus() {
@@ -503,8 +556,7 @@
             window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
-        // FIXED FUNCTION
-                async function refreshTime() {
+        async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -514,7 +566,6 @@
             
             checkGiftNotification(data.gift);
 
-            // If the user has time
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
@@ -528,12 +579,21 @@
                 document.getElementById('balance-badge').className = 'badge time';
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
+
+                // Show floating key bar if time is active
+                localStorage.setItem('axon_show_key', 'true');
+                document.getElementById('floating-key').innerText = currentUser;
+                document.getElementById('key-bar').classList.add('on');
+
             } else {
-                // If they have no time or are expired
                 document.getElementById('time-pill').innerText = 'no time';
                 document.getElementById('balance-badge').className = 'badge empty';
                 document.getElementById('balance-badge').innerText = 'Empty';
                 document.getElementById('balance-time').innerText = '0m';
+
+                // Hide floating key bar if no time
+                localStorage.removeItem('axon_show_key');
+                document.getElementById('key-bar').classList.remove('on');
             }
         }
 
