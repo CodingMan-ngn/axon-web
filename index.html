@@ -425,6 +425,11 @@
             const container = document.getElementById('plans-list');
             container.innerHTML = '';
             
+            if (availablePlans.length === 0) {
+                container.innerHTML = `<p class="card-desc" style="text-align: center; padding: 20px;">No ad plans available yet. Please check back later.</p>`;
+                return;
+            }
+
             availablePlans.forEach(plan => {
                 const isActive = userActivePlanId === plan.id;
                 const isLocked = userActivePlanId && userActivePlanId !== plan.id;
@@ -478,6 +483,7 @@
             });
             const data = await res.json();
             
+            // FIX: Check if data.expires exists and is in the future
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
@@ -491,13 +497,13 @@
                 document.getElementById('balance-badge').className = 'badge time';
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
-                return;
+            } else {
+                // No time
+                document.getElementById('time-pill').innerText = 'no time';
+                document.getElementById('balance-badge').className = 'badge empty';
+                document.getElementById('balance-badge').innerText = 'Empty';
+                document.getElementById('balance-time').innerText = '0m';
             }
-            
-            document.getElementById('time-pill').innerText = 'no time';
-            document.getElementById('balance-badge').className = 'badge empty';
-            document.getElementById('balance-badge').innerText = 'Empty';
-            document.getElementById('balance-time').innerText = '0m';
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
