@@ -179,11 +179,18 @@
         let currentRole = 'user';
         let isLogin = true;
 
+        // Force Login Screen
+        document.getElementById('auth-title').innerText = 'Login to Axon';
+        document.getElementById('auth-btn').innerText = 'Login';
+        document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
+
         window.onload = async () => {
+            // Get Active Count
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
                 document.getElementById('active-users').innerText = d.active || 0;
             }).catch(() => {});
 
+            // Check LocalStorage for valid session
             const savedUser = localStorage.getItem('axon_user');
             if (savedUser) {
                 const res = await fetch(API_URL + '/verify', {
@@ -203,6 +210,7 @@
                 }
             }
 
+            // Success param check
             const params = new URLSearchParams(window.location.search);
             if (params.get('success') === 'true') {
                 window.history.replaceState({}, document.title, "/");
@@ -220,14 +228,15 @@
             document.getElementById('auth-title').innerText = isLogin ? 'Login to Axon' : 'Create Account';
             document.getElementById('toggle-btn').innerText = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
             document.getElementById('auth-btn').innerText = isLogin ? 'Login' : 'Sign Up';
-            document.getElementById('auth-error').innerText = ''; // Clear errors on toggle
+            document.getElementById('auth-error').innerText = '';
         }
 
         async function submitAuth() {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
             const errBox = document.getElementById('auth-error');
-            errBox.innerText = ''; // Clear previous errors
+            errBox.innerText = '';
+            errBox.style.color = '#ef5350';
 
             if (!user || !pass) {
                 errBox.innerText = 'Please fill in all fields.';
@@ -243,7 +252,7 @@
             const data = await res.json();
 
             if (data.error) {
-                errBox.innerText = data.error; // Show error on UI instead of alert
+                errBox.innerText = data.error;
                 return;
             }
 
@@ -256,7 +265,7 @@
             } else {
                 errBox.style.color = '#4caf50';
                 errBox.innerText = 'Account created! Please login.';
-                setTimeout(() => toggleAuth(), 1500); // Auto switch to login after 1.5s
+                setTimeout(() => toggleAuth(), 1500);
             }
         }
 
