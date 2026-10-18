@@ -1,12 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Axon - Dashboard</title>
+    <title>Axon</title>
     <style>
         body { background: #0a0a0a; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        
+        /* Auth Screen */
+        #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .logo-img { width: 120px; margin-bottom: 20px; }
+        .auth-box { background: #111; border: 1px solid #222; border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
+        .auth-box h2 { margin: 0 0 20px 0; font-weight: 800; letter-spacing: 1px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: #555; }
+        .btn { width: 100%; padding: 12px; background: white; color: black; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 14px; transition: 0.2s; }
+        .btn:hover { background: #ddd; }
+        .btn-link { background: transparent; color: #888; font-size: 12px; margin-top: 15px; border: none; cursor: pointer; text-decoration: underline; }
+        .stat-bar { position: absolute; top: 20px; right: 20px; font-size: 12px; color: #666; background: #111; padding: 6px 12px; border-radius: 20px; border: 1px solid #222; display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; background: #4caf50; border-radius: 50%; }
+
+        /* Dashboard */
+        #dashboard-view { display: none; }
         .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid #222; }
-        .logo { font-size: 20px; font-weight: 900; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
-        .logo-icon { width: 28px; height: 28px; background: white; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .nav-logo { height: 40px; }
         .nav-right { display: flex; gap: 12px; }
         .pill { padding: 6px 16px; border-radius: 20px; background: #1a1a1a; border: 1px solid #333; font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
         .pill.active { color: white; }
@@ -20,9 +35,6 @@
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid; display: inline-flex; align-items: center; gap: 4px; }
         .badge.empty { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border-color: rgba(255, 183, 77, 0.2); }
         .badge.time { background: rgba(76, 175, 80, 0.1); color: #4caf50; border-color: rgba(76, 175, 80, 0.2); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
-        .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: transparent; color: #666; }
-        .tab.active { background: #1a1a1a; color: white; border-color: #333; }
         .balance { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; color: #666; margin-bottom: 20px; }
         .card-desc { color: #666; font-size: 13px; line-height: 1.5; }
         .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid #222; border-radius: 12px; background: #0a0a0a; }
@@ -30,57 +42,48 @@
         .ad-info { flex: 1; }
         .ad-title { font-size: 14px; font-weight: 700; color: white; }
         .ad-desc { font-size: 12px; color: #666; margin-top: 2px; }
-        .btn { background: white; color: black; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
-        .btn:hover { background: #ddd; }
+        .btn-start { background: white; color: black; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
         .hidden { display: none !important; }
-        #login-view { max-width: 400px; margin: 100px auto; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 14px; }
-        .btn-full { width: 100%; padding: 12px; background: white; color: black; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 14px; }
-        .btn-outline { background: transparent; color: white; border: 1px solid #333; }
-        .key-display { font-family: monospace; font-size: 20px; color: #4caf50; letter-spacing: 2px; margin: 20px 0; background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN VIEW -->
-    <div id="login-view">
-        <h2 style="margin-bottom: 5px;">Welcome to Axon</h2>
-        <p style="color: #888; font-size: 14px; margin-top: 0; margin-bottom: 30px;">Enter your key or generate a new one.</p>
+    <!-- AUTH VIEW -->
+    <div id="auth-view">
+        <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Accounts</div>
         
-        <input id="key-input" type="text" placeholder="AXON-XXXX-XXXX" style="text-align: center; letter-spacing: 2px;" />
-        <button class="btn-full" onclick="login()">Login</button>
+        <!-- Replace src with your uploaded logo URL if hosted, or a local file in the repo -->
+        <img src="https://i.ibb.co/6P4Z9Z9/axon-logo.png" class="logo-img" alt="Axon">
         
-        <div style="margin-top: 20px; font-size: 12px; color: #555;">OR</div>
-        
-        <button class="btn-full btn-outline" onclick="generateKey()">Generate New Key</button>
+        <div class="auth-box">
+            <h2 id="auth-title">Login to Axon</h2>
+            <input id="username" type="text" placeholder="Username" />
+            <input id="password" type="password" placeholder="Password" />
+            <button class="btn" onclick="submitAuth()">Login</button>
+            <button class="btn-link" onclick="toggleAuth()" id="toggle-btn">Don't have an account? Sign up</button>
+        </div>
     </div>
 
     <!-- DASHBOARD VIEW -->
-    <div id="dashboard-view" class="hidden">
+    <div id="dashboard-view">
         <div class="nav">
-            <div class="logo"><div class="logo-icon">A</div> AXON</div>
+            <img src="https://i.ibb.co/6P4Z9Z9/axon-logo.png" class="nav-logo" alt="Axon">
             <div class="nav-right">
                 <div class="pill" id="time-pill">no time</div>
-                <div class="pill active"><div style="width: 16px; height: 16px; background: #555; border-radius: 50%;"></div> User</div>
+                <div class="pill active"><div style="width: 16px; height: 16px; background: #555; border-radius: 50%;"></div> <span id="user-display">User</span></div>
             </div>
         </div>
 
         <div class="container">
-            <h1>Hey, <span>User</span></h1>
+            <h1>Hey, <span id="hero-name">User</span></h1>
             <p class="subtitle">Your time, downloads and ways to earn more.</p>
 
-            <!-- Windows Balance -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Windows Balance</div>
                     <div class="badge empty" id="balance-badge">Empty</div>
                 </div>
                 
-                <div class="tabs">
-                    <button class="tab active">Windows</button>
-                    <button class="tab">Android</button>
-                </div>
-
                 <div class="balance">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     <span id="balance-time">0m</span>
@@ -89,7 +92,6 @@
                 <p class="card-desc">Earn Windows time below or redeem a key, then sign into the app with this account.</p>
             </div>
 
-            <!-- Earn Time -->
             <div class="card">
                 <div class="card-header">
                     <div>
@@ -110,7 +112,7 @@
                         <div class="ad-title">BoostyLink</div>
                         <div class="ad-desc">2 checkpoints · 1 day</div>
                     </div>
-                    <button class="btn" onclick="startAd()">Start</button>
+                    <button class="btn-start" onclick="startAd()">Start</button>
                 </div>
             </div>
         </div>
@@ -118,75 +120,88 @@
 
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
-        let currentKey = '';
+        let currentUser = '';
+        let isLogin = true;
 
-        // Check if already logged in
         window.onload = async () => {
-            const savedKey = localStorage.getItem('axon_key');
-            if (savedKey) {
-                currentKey = savedKey;
+            // Fetch active user count
+            fetch(API_URL + '/stats').then(r => r.json()).then(d => {
+                document.getElementById('active-users').innerText = d.active || 0;
+            }).catch(() => {});
+
+            // Check if already logged in
+            const savedUser = localStorage.getItem('axon_user');
+            if (savedUser) {
+                currentUser = savedUser;
                 showDashboard();
+            }
+
+            // Check for ad success
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('success') === 'true') {
+                alert('Success! 1 Day of time has been added to your account.');
+                window.history.replaceState({}, document.title, "/");
             }
         }
 
-        async function generateKey() {
-            const res = await fetch(API_URL + '/generate', { method: 'POST' });
-            const data = await res.json();
-            currentKey = data.key;
-            localStorage.setItem('axon_key', currentKey);
-            showDashboard();
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? 'Login to Axon' : 'Create Account';
+            document.getElementById('toggle-btn').innerText = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
+            document.querySelector('.btn').innerText = isLogin ? 'Login' : 'Sign Up';
         }
 
-        async function login() {
-            const input = document.getElementById('key-input').value.trim();
-            if (!input) return alert('Please enter a key');
+        async function submitAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            if (!user || !pass) return alert('Fill all fields');
+
+            const endpoint = isLogin ? '/login' : '/register';
+            const res = await fetch(API_URL + endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            const data = await res.json();
+
+            if (data.error) return alert(data.error);
+
+            if (isLogin) {
+                currentUser = data.key;
+                localStorage.setItem('axon_user', currentUser);
+                showDashboard();
+            } else {
+                alert('Account created! Please login.');
+                toggleAuth();
+            }
+        }
+
+        async function showDashboard() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
             
-            // Verify with Worker
+            document.getElementById('user-display').innerText = currentUser;
+            document.getElementById('hero-name').innerText = currentUser;
+
+            // Check time
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: input, hwid: 'web-browser' })
+                body: JSON.stringify({ key: currentUser, hwid: 'web-browser' })
             });
             const data = await res.json();
             
-            if (data.valid || data.reason === 'No time. Complete an ad on the website.') {
-                currentKey = input;
-                localStorage.setItem('axon_key', currentKey);
-                showDashboard();
-            } else {
-                alert(data.reason);
+            if (data.valid) {
+                document.getElementById('time-pill').innerText = '1 day';
+                document.getElementById('balance-badge').className = 'badge time';
+                document.getElementById('balance-badge').innerText = 'Active';
+                document.getElementById('balance-time').innerText = '1d 0h 0m';
             }
         }
 
-        function showDashboard() {
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('dashboard-view').classList.remove('hidden');
-            
-            // Fetch user time from API to update the UI
-            fetch(API_URL + '/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: currentKey, hwid: 'web-browser' })
-            }).then(r => r.json()).then(data => {
-                if (data.valid) {
-                    document.getElementById('time-pill').innerText = '1 day';
-                    document.getElementById('balance-badge').className = 'badge time';
-                    document.getElementById('balance-badge').innerText = 'Active';
-                    document.getElementById('balance-time').innerText = '1d 0h 0m';
-                }
-            });
-        }
-
         function startAd() {
-            const boostyUrl = `https://boostylink.com/RNY95YRb?key=${currentKey}`;
+            const boostyUrl = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
             window.location.href = boostyUrl;
-        }
-                // Check for success URL param
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'true') {
-            alert('Success! 1 Day of time has been added to your account.');
-            // Remove the param from the URL so the alert doesn't show on reload
-            window.history.replaceState({}, document.title, "/");
         }
     </script>
 </body>
