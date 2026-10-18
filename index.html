@@ -263,7 +263,7 @@
                 });
                 const data = await res.json();
                 
-                if (data.valid || data.reason === 'No time. Complete an ad on the website.') {
+                if (data.valid || data.reason === 'No time') {
                     currentUser = savedUser;
                     currentRole = savedRole;
                     showDashboard();
@@ -475,7 +475,7 @@
             window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
-                async function refreshTime() {
+        async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -483,30 +483,29 @@
             });
             const data = await res.json();
             
-            if (data.valid && data.expires) {
+            // FIX: Check if data.expires exists and is in the future
+            if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
                 const diffMs = expires - now;
                 
-                if (diffMs > 0) {
-                    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                    
-                    document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
-                    document.getElementById('balance-badge').className = 'badge time';
-                    document.getElementById('balance-badge').innerText = 'Active';
-                    document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
-                    return;
-                }
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
+                document.getElementById('balance-badge').className = 'badge time';
+                document.getElementById('balance-badge').innerText = 'Active';
+                document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
+            } else {
+                // No time
+                document.getElementById('time-pill').innerText = 'no time';
+                document.getElementById('balance-badge').className = 'badge empty';
+                document.getElementById('balance-badge').innerText = 'Empty';
+                document.getElementById('balance-time').innerText = '0m';
             }
-            
-            // If no time or invalid
-            document.getElementById('time-pill').innerText = 'no time';
-            document.getElementById('balance-badge').className = 'badge empty';
-            document.getElementById('balance-badge').innerText = 'Empty';
-            document.getElementById('balance-time').innerText = '0m';
         }
+
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
