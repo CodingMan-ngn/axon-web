@@ -504,7 +504,7 @@
         }
 
         // FIXED FUNCTION
-        async function refreshTime() {
+                async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -514,7 +514,7 @@
             
             checkGiftNotification(data.gift);
 
-            // If time is active
+            // If the user has time
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
@@ -529,7 +529,7 @@
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
             } else {
-                // If no time
+                // If they have no time or are expired
                 document.getElementById('time-pill').innerText = 'no time';
                 document.getElementById('balance-badge').className = 'badge empty';
                 document.getElementById('balance-badge').innerText = 'Empty';
