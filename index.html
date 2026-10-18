@@ -548,23 +548,30 @@
             });
         }
 
-                              async function startPlan(planId) {
-            if (userActivePlanId && userActivePlanId !== planId) {
-                return showToast('You already have an active plan. Finish it first.');
-            }
+    async function startPlan(planId) {
+  if (userActivePlanId && userActivePlanId !== planId) {
+    return showToast('You already have an active plan. Finish it first.');
+  }
 
-            const res = await fetch(API_URL + '/user/start-plan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, plan_id: planId })
-            });
-            const data = await res.json();
-            
-            if (data.error) return showToast(data.error);
-            
-            // Send the user to BoostyLink with the key as a query parameter
-            window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
-        }
+  const res = await fetch(API_URL + '/user/start-plan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUser, plan_id: planId })
+  });
+  const data = await res.json();
+  if (data.error) return showToast(data.error);
+
+  // Get a one-time token tied to this user
+  const tokenRes = await fetch(API_URL + '/reward/init', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: currentUser })
+  });
+  const tokenData = await tokenRes.json();
+
+  // Send token as the key — BoostyLink passes it through unchanged
+  window.location.href = `https://boostylink.com/RNY95YRb?key=${tokenData.token}`;
+}
 
         async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
