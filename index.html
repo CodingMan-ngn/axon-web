@@ -227,7 +227,7 @@
         </div>
     </div>
 
-    <!-- Gift Notification Modal -->
+    <!-- Gift Modal -->
     <div class="modal" id="gift-modal">
         <div class="modal-content" style="text-align: center;">
             <div style="font-size: 48px; margin-bottom: 20px;">🎁</div>
@@ -248,6 +248,7 @@
         let userActivePlanId = null;
         let userAdSteps = 0;
 
+        // Force Login Screen
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
         document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
@@ -307,7 +308,6 @@
 
         async function dismissGift() {
             document.getElementById('gift-modal').style.display = 'none';
-            // Clear from DB so it doesn't show again
             await fetch(API_URL + '/user/clear-gift', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -503,6 +503,7 @@
             window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
+        // FIXED FUNCTION
         async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
@@ -513,6 +514,7 @@
             
             checkGiftNotification(data.gift);
 
+            // If time is active
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
@@ -527,6 +529,7 @@
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
             } else {
+                // If no time
                 document.getElementById('time-pill').innerText = 'no time';
                 document.getElementById('balance-badge').className = 'badge empty';
                 document.getElementById('balance-badge').innerText = 'Empty';
