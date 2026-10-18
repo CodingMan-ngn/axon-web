@@ -328,26 +328,37 @@
                 }
             }
 
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('success') === 'time_added') {
+                       const params = new URLSearchParams(window.location.search);
+            
+            if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    refreshTime();
-                    showCountdownPopup();
-                    showKeyModal();
+                    showToast('Verifying ad completion...');
+                    
+                    fetch(API_URL + '/reward/claim', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: currentUser })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.error) {
+                            showToast('Error: ' + data.error);
+                        } else if (data.completed) {
+                            showCountdownPopup();
+                            showKeyModal();
+                            refreshTime();
+                        } else {
+                            showToast('Ad step completed! Complete more steps to unlock time.');
+                            loadUserPlanStatus();
+                        }
+                    })
+                    .catch(() => showToast('Failed to verify ad. Please try again.'));
                 }
-            } else if (params.get('success') === 'step_completed') {
-                window.history.replaceState({}, document.title, "/");
-                showToast('Ad step completed! Complete more steps to unlock time.');
-                loadUserPlanStatus();
             } else if (params.get('success') === 'error_user_not_found') {
                 window.history.replaceState({}, document.title, "/");
-                showToast('Error: Session expired or user not found. Please try again.');
-            } else if (params.get('success') === 'error_no_plan') {
-                window.history.replaceState({}, document.title, "/");
-                showToast('Error: No active plan found.');
+                showToast('Error: Session expired. Please try again.');
             }
-        }
 
         function showKeyModal() {
             document.getElementById('key-text').innerText = currentUser;
@@ -549,7 +560,7 @@
             });
         }
 
-                async function startPlan(planId) {
+                    async function startPlan(planId) {
             if (userActivePlanId && userActivePlanId !== planId) {
                 return showToast('You already have an active plan. Finish it first.');
             }
@@ -562,15 +573,8 @@
             const data = await res.json();
             if (data.error) return showToast(data.error);
 
-            const tokenRes = await fetch(API_URL + '/reward/init', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            });
-            const tokenData = await tokenRes.json();
-            if (tokenData.error) return showToast(tokenData.error);
-
-            window.location.href = `https://boostylink.com/RNY95YRb?key=${tokenData.token}`;
+            // BoostyLink just redirects back to ?success=ad_finished
+            window.location.href = `https://boostylink.com/RNY95YRb`;
         }
 
         async function refreshTime() {
