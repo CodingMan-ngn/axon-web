@@ -271,7 +271,7 @@
         <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="copyKey()">Copy</button>
     </div>
 
-    <script>
+        <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
         let currentRole = 'user';
@@ -282,12 +282,10 @@
         let userActivePlanId = null;
         let userAdSteps = 0;
 
-        // Force Login Screen
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
         document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
 
-        // Custom Toast Notification System
         function showToast(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -342,9 +340,12 @@
                 window.history.replaceState({}, document.title, "/");
                 showToast('Ad step completed! Complete more steps to unlock time.');
                 loadUserPlanStatus();
-            } else if (params.get('success') === 'error') {
+            } else if (params.get('success') === 'error_user_not_found') {
                 window.history.replaceState({}, document.title, "/");
-                showToast('Ad verification failed. Make sure you complete the full ad.');
+                showToast('Error: Session expired or user not found. Please try again.');
+            } else if (params.get('success') === 'error_no_plan') {
+                window.history.replaceState({}, document.title, "/");
+                showToast('Error: No active plan found.');
             }
         }
 
@@ -548,30 +549,31 @@
             });
         }
 
-    async function startPlan(planId) {
-  if (userActivePlanId && userActivePlanId !== planId) {
-    return showToast('You already have an active plan. Finish it first.');
-  }
+        async function startPlan(planId) {
+            if (userActivePlanId && userActivePlanId !== planId) {
+                return showToast('You already have an active plan. Finish it first.');
+            }
 
-  const res = await fetch(API_URL + '/user/start-plan', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: currentUser, plan_id: planId })
-  });
-  const data = await res.json();
-  if (data.error) return showToast(data.error);
+            const res = await fetch(API_URL + '/user/start-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, plan_id: planId })
+            });
+            const data = await res.json();
+            if (data.error) return showToast(data.error);
 
-  // Get a one-time token tied to this user
-  const tokenRes = await fetch(API_URL + '/reward/init', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: currentUser })
-  });
-  const tokenData = await tokenRes.json();
+            // Generate one-time reward token
+            const tokenRes = await fetch(API_URL + '/reward/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+            const tokenData = await tokenRes.json();
+            if (tokenData.error) return showToast(tokenData.error);
 
-  // Send token as the key — BoostyLink passes it through unchanged
-  window.location.href = `https://boostylink.com/RNY95YRb?key=${tokenData.token}`;
-}
+            // Pass raw UUID to BoostyLink
+            window.location.href = `https://boostylink.com/RNY95YRb?key=${tokenData.token}`;
+        }
 
         async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
@@ -699,7 +701,7 @@
 
         function filterUsers() {
             const query = document.getElementById('admin-search').value.toLowerCase();
-            const filtered = allUsers.filter(u => u.email.toLowerCase().includes(query));
+            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(query));
             renderAdminTable(filtered);
         }
 
@@ -715,18 +717,18 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <td style="font-weight: 600;">${u.email}</td>
+                        <td style="font-weight: 600;">${u.username}</td>
                         <td>${timeLeft}</td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <input id="days-${u.email}" type="number" placeholder="Days" style="width: 60px; margin: 0; padding: 6px;" />
-                                <button class="btn" style="width: auto; margin: 0; padding: 6px 12px;" onclick="giveUserTime('${u.email}')">Give</button>
+                                <input id="days-${u.username}" type="number" placeholder="Days" style="width: 60px; margin: 0; padding: 6px;" />
+                                <button class="btn" style="width: auto; margin: 0; padding: 6px 12px;" onclick="giveUserTime('${u.username}')">Give</button>
                             </div>
                         </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <button class="btn-warn" onclick="resetHWID('${u.email}')">Reset HWID</button>
-                                <button class="btn-danger" onclick="removeUser('${u.email}')">Remove</button>
+                                <button class="btn-warn" onclick="resetHWID('${u.username}')">Reset HWID</button>
+                                <button class="btn-danger" onclick="removeUser('${u.username}')">Remove</button>
                             </div>
                         </td>
                     </tr>
@@ -734,34 +736,34 @@
             });
         }
 
-        async function giveUserTime(email) {
-            const days = document.getElementById(`days-${email}`).value;
+        async function giveUserTime(username) {
+            const days = document.getElementById(`days-${username}`).value;
             if (!days) return;
             const res = await fetch(API_URL + '/admin/give-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: email, days: parseInt(days) })
+                body: JSON.stringify({ username: username, days: parseInt(days) })
             });
-            if (res.ok) { showToast(`Time given to ${email}`); loadAdminUsers(); }
+            if (res.ok) { showToast(`Time given to ${username}`); loadAdminUsers(); }
         }
 
-        async function removeUser(email) {
-            if (!confirm(`Are you sure you want to remove ${email}?`)) return;
+        async function removeUser(username) {
+            if (!confirm(`Are you sure you want to remove ${username}?`)) return;
             await fetch(API_URL + '/admin/remove-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: email })
+                body: JSON.stringify({ username: username })
             });
             loadAdminUsers();
         }
 
-        async function resetHWID(email) {
+        async function resetHWID(username) {
             await fetch(API_URL + '/admin/reset-hwid', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: email })
+                body: JSON.stringify({ username: username })
             });
-            showToast(`HWID reset for ${email}`);
+            showToast(`HWID reset for ${username}`);
             loadAdminUsers();
         }
 
