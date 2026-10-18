@@ -72,6 +72,14 @@
         .btn-danger:hover { background: rgba(239, 83, 80, 0.2); }
         .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-warn:hover { background: rgba(255, 183, 77, 0.2); }
+
+        /* Countdown Popup */
+        #countdown-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); }
+        .countdown-box { background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .countdown-timer { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .time-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px 20px; min-width: 70px; }
+        .time-block span { display: block; font-size: 32px; font-weight: 900; font-family: monospace; color: var(--accent); }
+        .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
     </style>
 </head>
 <body data-theme="dark">
@@ -131,7 +139,7 @@
                     <div class="card-header">
                         <div>
                             <div class="card-title">Earn Time</div>
-                            <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 0 0;">Earn 1 day for Windows.</p>
+                            <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 0 0;" id="ad-progress-text">Complete the ad steps.</p>
                         </div>
                     </div>
                     <div class="ad-row">
@@ -140,7 +148,7 @@
                         </div>
                         <div class="ad-info">
                             <div class="ad-title">BoostyLink</div>
-                            <div class="ad-desc">2 checkpoints · 1 day</div>
+                            <div class="ad-desc" id="ad-desc-text">1 checkpoint · 1 day</div>
                         </div>
                         <button class="btn-start" onclick="startAd()">Start</button>
                     </div>
@@ -163,18 +171,25 @@
                             <div style="color: var(--text-muted); font-size: 13px;">Click avatar to upload image</div>
                         </div>
                     </div>
-                    <button class="btn" style="width: 200px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="openModal('change-pass-modal')">Change Password</button>
+                    <button class="btn" style="width: 200px; background: transparent; border: 1px solid var(--border); color: var(--text); margin-bottom: 10px;" onclick="openModal('change-pass-modal')">Change Password</button>
+                    <button class="btn btn-warn" style="width: 200px;" onclick="resetMyHWID()">Reset My HWID (New PC)</button>
                 </div>
             </div>
 
             <div id="tab-admin" class="hidden">
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title" style="color: #ef5350;">Admin: Give All Users Time</div>
+                        <div class="card-title" style="color: #ef5350;">Admin Settings</div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <input id="admin-days-all" type="number" placeholder="Days" style="width: 100px;" />
-                        <button class="btn" style="width: auto;" onclick="giveAllTime()">Give Time</button>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                        <span style="font-size: 13px; color: var(--text-muted);">Ad Gateways required for 1 Day:</span>
+                        <input id="admin-gateway-count" type="number" min="1" max="10" style="width: 80px; margin: 0;" />
+                        <button class="btn" style="width: auto; margin: 0; padding: 8px 16px;" onclick="saveGatewaySettings()">Save</button>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="font-size: 13px; color: var(--text-muted);">Give All Users Time (Days):</span>
+                        <input id="admin-days-all" type="number" style="width: 80px; margin: 0;" />
+                        <button class="btn" style="width: auto; margin: 0; padding: 8px 16px;" onclick="giveAllTime()">Give</button>
                     </div>
                 </div>
 
@@ -211,12 +226,28 @@
         </div>
     </div>
 
+    <!-- Countdown Modal -->
+    <div id="countdown-modal">
+        <div class="countdown-box">
+            <h2 style="margin: 0 0 10px 0; font-size: 24px;">Time Added!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Your account has been credited.</p>
+            <div class="countdown-timer">
+                <div class="time-block"><span id="cd-days">0</span><label>Days</label></div>
+                <div class="time-block"><span id="cd-hours">0</span><label>Hours</label></div>
+                <div class="time-block"><span id="cd-mins">0</span><label>Mins</label></div>
+                <div class="time-block"><span id="cd-secs">0</span><label>Secs</label></div>
+            </div>
+            <button class="btn" style="margin-top: 30px;" onclick="closeCountdown()">Awesome</button>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
         let currentRole = 'user';
         let isLogin = true;
         let allUsers = [];
+        let countdownInterval = null;
 
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
@@ -247,10 +278,42 @@
             }
 
             const params = new URLSearchParams(window.location.search);
-            if (params.get('success') === 'true') {
+            if (params.get('success') === 'time_added') {
                 window.history.replaceState({}, document.title, "/");
-                if (currentUser) refreshTime();
+                if (currentUser) {
+                    refreshTime();
+                    showCountdownPopup();
+                }
+            } else if (params.get('success') === 'step_completed') {
+                window.history.replaceState({}, document.title, "/");
+                alert('Ad step completed! Complete more steps to unlock time.');
             }
+        }
+
+        function showCountdownPopup() {
+            document.getElementById('countdown-modal').style.display = 'flex';
+            // Start a dummy countdown of 24h for visual effect
+            let target = new Date();
+            target.setDate(target.getDate() + 1);
+            
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const diff = target - now;
+                if (diff <= 0) {
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                document.getElementById('cd-days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('cd-hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('cd-mins').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('cd-secs').innerText = Math.floor((diff % (1000 * 60)) / 1000);
+            }, 1000);
+        }
+
+        function closeCountdown() {
+            document.getElementById('countdown-modal').style.display = 'none';
+            if (countdownInterval) clearInterval(countdownInterval);
         }
 
         function switchTab(tab) {
@@ -401,27 +464,45 @@
             }
         }
 
-        // --- Admin Logic ---
-        async function giveAllTime() {
-            const days = document.getElementById('admin-days-all').value;
-            if (!days) return;
-            const res = await fetch(API_URL + '/admin/give-all', {
+        async function resetMyHWID() {
+            if (!confirm('Resetting HWID will unbind your key from this PC so you can use it on a new one. You can only do this once every 48 hours. Continue?')) return;
+
+            const res = await fetch(API_URL + '/user/reset-hwid', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ days: parseInt(days) })
+                body: JSON.stringify({ username: currentUser })
             });
             const data = await res.json();
             if (data.success) {
-                alert('Time given to all users.');
-                loadAdminUsers();
+                alert('HWID reset! You can now log in on a new PC.');
+            } else {
+                alert(data.error);
             }
         }
 
+        // --- Admin Logic ---
         async function loadAdminUsers() {
             const res = await fetch(API_URL + '/admin/users');
             const data = await res.json();
             allUsers = data.users || [];
             renderAdminTable(allUsers);
+
+            const settingsRes = await fetch(API_URL + '/admin/settings');
+            const settingsData = await settingsRes.json();
+            document.getElementById('admin-gateway-count').value = settingsData.gateway_count || 1;
+        }
+
+        async function saveGatewaySettings() {
+            const count = document.getElementById('admin-gateway-count').value;
+            if (!count || count < 1) return alert('Must be at least 1');
+            
+            const res = await fetch(API_URL + '/admin/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gateway_count: parseInt(count) })
+            });
+            const data = await res.json();
+            if (data.success) alert('Gateway count saved!');
         }
 
         function filterUsers() {
@@ -500,6 +581,21 @@
             const data = await res.json();
             if (data.success) {
                 alert(`HWID reset for ${email}`);
+                loadAdminUsers();
+            }
+        }
+
+        async function giveAllTime() {
+            const days = document.getElementById('admin-days-all').value;
+            if (!days) return;
+            const res = await fetch(API_URL + '/admin/give-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days: parseInt(days) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Time given to all users.');
                 loadAdminUsers();
             }
         }
