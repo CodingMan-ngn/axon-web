@@ -6,26 +6,15 @@
     <title>Axon</title>
     <style>
         :root {
-            --bg: #0a0a0a;
-            --panel: #111;
-            --border: #222;
-            --text: #fff;
-            --text-muted: #888;
-            --accent: #4caf50;
+            --bg: #0a0a0a; --panel: #111; --border: #222; --text: #fff; --text-muted: #888; --accent: #4caf50;
         }
         [data-theme="light"] {
-            --bg: #f5f5f5;
-            --panel: #fff;
-            --border: #ddd;
-            --text: #000;
-            --text-muted: #666;
+            --bg: #f5f5f5; --panel: #fff; --border: #ddd; --text: #000; --text-muted: #666;
         }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
         
-        /* Styled A Logo */
         .logo-mark {
-            width: 40px; height: 40px;
-            background: var(--text); color: var(--bg);
+            width: 40px; height: 40px; background: var(--text); color: var(--bg);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 24px; font-weight: 900; font-family: monospace;
         }
@@ -69,10 +58,8 @@
         .btn-start { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
         .hidden { display: none !important; }
 
-        /* Admin Panel & Modals */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; }
-        .admin-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
@@ -80,14 +67,14 @@
 
     <!-- AUTH VIEW -->
     <div id="auth-view">
-        <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Accounts</div>
+        <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Keys</div>
         <div class="logo-mark" style="margin-bottom: 20px;">A</div>
         
         <div class="auth-box">
             <h2 id="auth-title">Login to Axon</h2>
             <input id="username" type="text" placeholder="Username" />
             <input id="password" type="password" placeholder="Password" />
-            <button class="btn" onclick="submitAuth()">Login</button>
+            <button class="btn" onclick="submitAuth()" id="auth-btn">Login</button>
             <button class="btn-link" onclick="toggleAuth()" id="toggle-btn">Don't have an account? Sign up</button>
         </div>
     </div>
@@ -100,9 +87,10 @@
                 <span style="font-weight: 800; letter-spacing: 1px;">AXON</span>
             </div>
             <div class="nav-right">
-                <button class="theme-btn" onclick="toggleTheme()">Switch Theme</button>
-                <div class="pill" id="time-pill">no time</div>
+                <button class="theme-btn" onclick="toggleTheme()">Theme</button>
+                <div class="pill" id="time-pill">loading...</div>
                 <div class="pill active"><div style="width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%;"></div> <span id="user-display">User</span></div>
+                <button class="theme-btn" onclick="logout()" style="color: #ef5350; border-color: #ef5350;">Logout</button>
             </div>
         </div>
 
@@ -148,7 +136,7 @@
             </div>
 
             <!-- ACCOUNT SETTINGS -->
-            <div class="card" id="settings-card">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-title">Account Settings</div>
                 </div>
@@ -186,29 +174,42 @@
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
         let currentRole = 'user';
-        let isLogin = true;
+        let isLogin = true; // Default to Login mode
 
         window.onload = async () => {
-            // Stats
+            // 1. Fetch real-time active count
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
                 document.getElementById('active-users').innerText = d.active || 0;
             }).catch(() => {});
 
-            // Auto login
+            // 2. Check for saved session
             const savedUser = localStorage.getItem('axon_user');
-            const savedRole = localStorage.getItem('axon_role');
             if (savedUser) {
-                currentUser = savedUser;
-                currentRole = savedRole || 'user';
-                showDashboard();
+                // Verify the saved user is still valid in the DB before showing dashboard
+                const res = await fetch(API_URL + '/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: savedUser, hwid: 'web-browser' })
+                });
+                const data = await res.json();
+                
+                if (data.valid || data.reason === 'No time. Complete an ad on the website.') {
+                    currentUser = savedUser;
+                    currentRole = localStorage.getItem('axon_role') || 'user';
+                    showDashboard();
+                } else {
+                    // Invalid session, clear it
+                    localStorage.removeItem('axon_user');
+                    localStorage.removeItem('axon_role');
+                }
             }
 
-            // Success Alert
+            // 3. Check for success param
             const params = new URLSearchParams(window.location.search);
             if (params.get('success') === 'true') {
-                alert('Success! Time added.');
+                alert('Success! Time added to your account.');
                 window.history.replaceState({}, document.title, "/");
-                refreshTime(); // Update UI immediately
+                if (currentUser) refreshTime();
             }
         }
 
@@ -221,7 +222,7 @@
             isLogin = !isLogin;
             document.getElementById('auth-title').innerText = isLogin ? 'Login to Axon' : 'Create Account';
             document.getElementById('toggle-btn').innerText = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
-            document.querySelector('.btn').innerText = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('auth-btn').innerText = isLogin ? 'Login' : 'Sign Up';
         }
 
         async function submitAuth() {
@@ -251,7 +252,13 @@
             }
         }
 
-        async function showDashboard() {
+        function logout() {
+            localStorage.removeItem('axon_user');
+            localStorage.removeItem('axon_role');
+            window.location.reload();
+        }
+
+        function showDashboard() {
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
@@ -273,17 +280,27 @@
             });
             const data = await res.json();
             
-            if (data.valid) {
-                document.getElementById('time-pill').innerText = '1 day';
-                document.getElementById('balance-badge').className = 'badge time';
-                document.getElementById('balance-badge').innerText = 'Active';
-                document.getElementById('balance-time').innerText = '1d 0h 0m';
-            } else {
-                document.getElementById('time-pill').innerText = 'no time';
-                document.getElementById('balance-badge').className = 'badge empty';
-                document.getElementById('balance-badge').innerText = 'Empty';
-                document.getElementById('balance-time').innerText = '0m';
+            if (data.valid && data.expires) {
+                const expires = new Date(data.expires);
+                const now = new Date();
+                const diffMs = expires - now;
+                
+                if (diffMs > 0) {
+                    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    
+                    document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
+                    document.getElementById('balance-badge').className = 'badge time';
+                    document.getElementById('balance-badge').innerText = 'Active';
+                    document.getElementById('balance-time').innerText = `${days}d ${hours}h 0m`;
+                    return;
+                }
             }
+            
+            document.getElementById('time-pill').innerText = 'no time';
+            document.getElementById('balance-badge').className = 'badge empty';
+            document.getElementById('balance-badge').innerText = 'Empty';
+            document.getElementById('balance-time').innerText = '0m';
         }
 
         function startAd() {
