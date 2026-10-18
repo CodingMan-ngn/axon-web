@@ -47,14 +47,16 @@
         .balance { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; color: var(--text-muted); margin-bottom: 20px; }
         .card-desc { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
         
-        .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); margin-bottom: 10px;}
-        .ad-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+        .ad-provider-card { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); margin-bottom: 10px; cursor: pointer; transition: 0.2s;}
+        .ad-provider-card:hover { border-color: var(--text-muted); }
+        .ad-provider-card.locked { opacity: 0.5; cursor: not-allowed; }
+        .ad-icon { width: 48px; height: 48px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
         .ad-info { flex: 1; }
-        .ad-title { font-size: 14px; font-weight: 700; }
-        .ad-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .btn-start { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
-        .btn-disabled { background: #333; color: #666; cursor: not-allowed; }
-
+        .ad-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .ad-badge { background: var(--text); color: var(--bg); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+        .ad-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .ad-progress { font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+        
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #333; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); cursor: pointer; position: relative; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .avatar input { display: none; }
@@ -77,9 +79,6 @@
         .time-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px 20px; min-width: 70px; }
         .time-block span { display: block; font-size: 32px; font-weight: 900; font-family: monospace; color: var(--accent); }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
-
-        .plan-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .plan-active { border-color: var(--accent); background: rgba(76, 175, 80, 0.05); }
     </style>
 </head>
 <body data-theme="dark">
@@ -135,12 +134,11 @@
                     <p class="card-desc">Earn Windows time below or redeem a key, then sign into the app with this account.</p>
                 </div>
 
-                <!-- Plan Section -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Earn Time Plans</div>
+                        <div class="card-title">Choose an Ad Provider</div>
                     </div>
-                    <p class="card-desc" style="margin-bottom: 15px;">Select a plan below. You can only have one active plan at a time.</p>
+                    <p class="card-desc" style="margin-bottom: 15px;">Choose a provider and complete its steps. This adds to your account balance.</p>
                     <div id="plans-list"></div>
                 </div>
             </div>
@@ -203,7 +201,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
     <div class="modal" id="change-pass-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0;">Change Password</h2>
@@ -417,7 +414,6 @@
             userActivePlanId = data.active_plan_id;
             userAdSteps = data.steps || 0;
 
-            // Load Plans
             const plansRes = await fetch(API_URL + '/plans');
             const plansData = await plansRes.json();
             availablePlans = plansData.plans || [];
@@ -435,21 +431,23 @@
                 
                 let progress = '';
                 if (isActive) {
-                    progress = `<div style="font-size:12px; color:var(--accent); margin-top:4px;">Progress: ${userAdSteps} / ${plan.gateway_count}</div>`;
+                    progress = `<div class="ad-progress">Progress: ${userAdSteps} / ${plan.gateway_count}</div>`;
                 }
 
-                const btnClass = isActive ? 'btn-start' : (isLocked ? 'btn-start btn-disabled' : 'btn-start');
-                const btnText = isActive ? 'Continue' : (isLocked ? 'Locked' : 'Start');
-                const btnAction = isLocked ? '' : `onclick="startPlan(${plan.id})"`;
+                const cardClass = isLocked ? 'ad-provider-card locked' : 'ad-provider-card';
+                const onClick = isLocked ? '' : `onclick="startPlan(${plan.id})"`;
 
                 container.innerHTML += `
-                    <div class="plan-card ${isActive ? 'plan-active' : ''}">
-                        <div>
-                            <div class="ad-title">${plan.name}</div>
-                            <div class="ad-desc">${plan.gateway_count} Ad Steps · ${plan.days_rewarded} Days</div>
+                    <div class="${cardClass}" ${onClick}>
+                        <div class="ad-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        </div>
+                        <div class="ad-info">
+                            <div class="ad-title">${plan.name} <span class="ad-badge">${plan.gateway_count} checkpoints</span></div>
+                            <div class="ad-desc">Complete ${plan.gateway_count} quick tasks. When done, you get ${plan.days_rewarded} days.</div>
                             ${progress}
                         </div>
-                        <button class="${btnClass}" ${btnAction}>${btnText}</button>
+                        <div style="color: var(--text-muted); font-size: 20px;">›</div>
                     </div>
                 `;
             });
@@ -469,7 +467,6 @@
             
             if (data.error) return alert(data.error);
             
-            // Redirect to Ad
             window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
@@ -571,13 +568,11 @@
         }
 
         async function loadAdminUsers() {
-            // Load Users
             const res = await fetch(API_URL + '/admin/users');
             const data = await res.json();
             allUsers = data.users || [];
             renderAdminTable(allUsers);
 
-            // Load Plans
             const plansRes = await fetch(API_URL + '/plans');
             const plansData = await plansRes.json();
             const adminPlans = document.getElementById('admin-plans-list');
