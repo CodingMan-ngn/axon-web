@@ -181,6 +181,13 @@
             const boostyUrl = `https://boostylink.com/RNY95YRb?key=${currentKey}`;
             window.location.href = boostyUrl;
         }
+                // Check for success URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            alert('Success! 1 Day of time has been added to your account.');
+            // Remove the param from the URL so the alert doesn't show on reload
+            window.history.replaceState({}, document.title, "/");
+        }
     </script>
 </body>
 </html>
