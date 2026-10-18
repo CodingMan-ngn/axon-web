@@ -1,59 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axon</title>
     <style>
-        body { background: #0a0a0a; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0a0a;
+            --panel: #111;
+            --border: #222;
+            --text: #fff;
+            --text-muted: #888;
+            --accent: #4caf50;
+        }
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --panel: #fff;
+            --border: #ddd;
+            --text: #000;
+            --text-muted: #666;
+        }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
         
-        /* Auth Screen */
-        #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .logo-img { width: 120px; margin-bottom: 20px; }
-        .auth-box { background: #111; border: 1px solid #222; border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
+        /* Styled A Logo */
+        .logo-mark {
+            width: 40px; height: 40px;
+            background: var(--text); color: var(--bg);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 900; font-family: monospace;
+        }
+
+        /* Auth View */
+        #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .auth-box { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
         .auth-box h2 { margin: 0 0 20px 0; font-weight: 800; letter-spacing: 1px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        input:focus { border-color: #555; }
-        .btn { width: 100%; padding: 12px; background: white; color: black; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 14px; transition: 0.2s; }
-        .btn:hover { background: #ddd; }
-        .btn-link { background: transparent; color: #888; font-size: 12px; margin-top: 15px; border: none; cursor: pointer; text-decoration: underline; }
-        .stat-bar { position: absolute; top: 20px; right: 20px; font-size: 12px; color: #666; background: #111; padding: 6px 12px; border-radius: 20px; border: 1px solid #222; display: flex; align-items: center; gap: 6px; }
-        .dot { width: 6px; height: 6px; background: #4caf50; border-radius: 50%; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--text-muted); }
+        .btn { width: 100%; padding: 12px; background: var(--text); color: var(--bg); font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 14px; transition: 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-link { background: transparent; color: var(--text-muted); font-size: 12px; margin-top: 15px; border: none; cursor: pointer; text-decoration: underline; }
+        
+        .stat-bar { position: absolute; top: 20px; right: 20px; font-size: 12px; color: var(--text-muted); background: var(--panel); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
 
         /* Dashboard */
         #dashboard-view { display: none; }
-        .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid #222; }
-        .nav-logo { height: 40px; }
-        .nav-right { display: flex; gap: 12px; }
-        .pill { padding: 6px 16px; border-radius: 20px; background: #1a1a1a; border: 1px solid #333; font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
-        .pill.active { color: white; }
+        .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border); }
+        .nav-right { display: flex; gap: 12px; align-items: center; }
+        .pill { padding: 6px 16px; border-radius: 20px; background: var(--panel); border: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .pill.active { color: var(--text); }
         .container { max-width: 700px; margin: 60px auto; padding: 0 20px; }
         h1 { font-size: 42px; margin: 0 0 10px 0; }
-        h1 span { color: #666; }
-        .subtitle { color: #888; margin-bottom: 40px; font-size: 15px; }
-        .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 30px; margin-bottom: 24px; }
+        h1 span { color: var(--text-muted); }
+        .subtitle { color: var(--text-muted); margin-bottom: 40px; font-size: 15px; }
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 30px; margin-bottom: 24px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card-title { font-size: 12px; color: #888; letter-spacing: 1.5px; font-weight: 700; text-transform: uppercase; }
+        .card-title { font-size: 12px; color: var(--text-muted); letter-spacing: 1.5px; font-weight: 700; text-transform: uppercase; }
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid; display: inline-flex; align-items: center; gap: 4px; }
         .badge.empty { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border-color: rgba(255, 183, 77, 0.2); }
         .badge.time { background: rgba(76, 175, 80, 0.1); color: #4caf50; border-color: rgba(76, 175, 80, 0.2); }
-        .balance { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; color: #666; margin-bottom: 20px; }
-        .card-desc { color: #666; font-size: 13px; line-height: 1.5; }
-        .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid #222; border-radius: 12px; background: #0a0a0a; }
-        .ad-icon { width: 40px; height: 40px; border-radius: 8px; background: #000; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
+        .balance { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; color: var(--text-muted); margin-bottom: 20px; }
+        .card-desc { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+        .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+        .ad-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
         .ad-info { flex: 1; }
-        .ad-title { font-size: 14px; font-weight: 700; color: white; }
-        .ad-desc { font-size: 12px; color: #666; margin-top: 2px; }
-        .btn-start { background: white; color: black; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .ad-title { font-size: 14px; font-weight: 700; }
+        .ad-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .btn-start { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
         .hidden { display: none !important; }
+
+        /* Admin Panel & Modals */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; }
+        .admin-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
     <!-- AUTH VIEW -->
     <div id="auth-view">
         <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Accounts</div>
-        
-        <!-- Replace src with your uploaded logo URL if hosted, or a local file in the repo -->
-        <img src="https://i.ibb.co/6P4Z9Z9/axon-logo.png" class="logo-img" alt="Axon">
+        <div class="logo-mark" style="margin-bottom: 20px;">A</div>
         
         <div class="auth-box">
             <h2 id="auth-title">Login to Axon</h2>
@@ -67,10 +95,14 @@
     <!-- DASHBOARD VIEW -->
     <div id="dashboard-view">
         <div class="nav">
-            <img src="https://i.ibb.co/6P4Z9Z9/axon-logo.png" class="nav-logo" alt="Axon">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="logo-mark" style="width: 30px; height: 30px; font-size: 18px;">A</div>
+                <span style="font-weight: 800; letter-spacing: 1px;">AXON</span>
+            </div>
             <div class="nav-right">
+                <button class="theme-btn" onclick="toggleTheme()">Switch Theme</button>
                 <div class="pill" id="time-pill">no time</div>
-                <div class="pill active"><div style="width: 16px; height: 16px; background: #555; border-radius: 50%;"></div> <span id="user-display">User</span></div>
+                <div class="pill active"><div style="width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%;"></div> <span id="user-display">User</span></div>
             </div>
         </div>
 
@@ -78,35 +110,34 @@
             <h1>Hey, <span id="hero-name">User</span></h1>
             <p class="subtitle">Your time, downloads and ways to earn more.</p>
 
+            <!-- BALANCE -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Windows Balance</div>
                     <div class="badge empty" id="balance-badge">Empty</div>
                 </div>
-                
                 <div class="balance">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     <span id="balance-time">0m</span>
                 </div>
-
                 <p class="card-desc">Earn Windows time below or redeem a key, then sign into the app with this account.</p>
             </div>
 
+            <!-- EARN TIME -->
             <div class="card">
                 <div class="card-header">
                     <div>
                         <div class="card-title">Earn Time</div>
-                        <p style="font-size: 13px; color: #666; margin: 5px 0 0 0;">Earn 1 day for Windows. Choose a platform when you start.</p>
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 0 0;">Earn 1 day for Windows. Choose a platform when you start.</p>
                     </div>
                     <div class="badge time">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                         1 day
                     </div>
                 </div>
-
                 <div class="ad-row">
                     <div class="ad-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     </div>
                     <div class="ad-info">
                         <div class="ad-title">BoostyLink</div>
@@ -115,33 +146,75 @@
                     <button class="btn-start" onclick="startAd()">Start</button>
                 </div>
             </div>
+
+            <!-- ACCOUNT SETTINGS -->
+            <div class="card" id="settings-card">
+                <div class="card-header">
+                    <div class="card-title">Account Settings</div>
+                </div>
+                <button class="btn" style="width: 200px; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="openModal('change-pass-modal')">Change Password</button>
+            </div>
+
+            <!-- ADMIN PANEL -->
+            <div class="card admin-section hidden" id="admin-panel">
+                <div class="card-header">
+                    <div class="card-title" style="color: #ef5350;">Admin Panel</div>
+                </div>
+                <p class="card-desc">Give all users a set amount of time.</p>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <input id="admin-days" type="number" placeholder="Days" style="width: 100px; margin: 0;" />
+                    <button class="btn" style="width: auto; margin: 0;" onclick="giveAllTime()">Give All Users Time</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal" id="change-pass-modal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0;">Change Password</h2>
+            <input id="old-pass" type="password" placeholder="Old Password" />
+            <input id="new-pass" type="password" placeholder="New Password" />
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="closeModal('change-pass-modal')">Cancel</button>
+                <button class="btn" onclick="changePassword()">Update</button>
+            </div>
         </div>
     </div>
 
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
+        let currentRole = 'user';
         let isLogin = true;
 
         window.onload = async () => {
-            // Fetch active user count
+            // Stats
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
                 document.getElementById('active-users').innerText = d.active || 0;
             }).catch(() => {});
 
-            // Check if already logged in
+            // Auto login
             const savedUser = localStorage.getItem('axon_user');
+            const savedRole = localStorage.getItem('axon_role');
             if (savedUser) {
                 currentUser = savedUser;
+                currentRole = savedRole || 'user';
                 showDashboard();
             }
 
-            // Check for ad success
+            // Success Alert
             const params = new URLSearchParams(window.location.search);
             if (params.get('success') === 'true') {
-                alert('Success! 1 Day of time has been added to your account.');
+                alert('Success! Time added.');
                 window.history.replaceState({}, document.title, "/");
+                refreshTime(); // Update UI immediately
             }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
         }
 
         function toggleAuth() {
@@ -168,7 +241,9 @@
 
             if (isLogin) {
                 currentUser = data.key;
+                currentRole = data.role;
                 localStorage.setItem('axon_user', currentUser);
+                localStorage.setItem('axon_role', currentRole);
                 showDashboard();
             } else {
                 alert('Account created! Please login.');
@@ -183,7 +258,14 @@
             document.getElementById('user-display').innerText = currentUser;
             document.getElementById('hero-name').innerText = currentUser;
 
-            // Check time
+            if (currentRole === 'admin') {
+                document.getElementById('admin-panel').classList.remove('hidden');
+            }
+
+            refreshTime();
+        }
+
+        async function refreshTime() {
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -196,12 +278,53 @@
                 document.getElementById('balance-badge').className = 'badge time';
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = '1d 0h 0m';
+            } else {
+                document.getElementById('time-pill').innerText = 'no time';
+                document.getElementById('balance-badge').className = 'badge empty';
+                document.getElementById('balance-badge').innerText = 'Empty';
+                document.getElementById('balance-time').innerText = '0m';
             }
         }
 
         function startAd() {
-            const boostyUrl = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
-            window.location.href = boostyUrl;
+            window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        async function changePassword() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            if (!oldPass || !newPass) return alert('Fill fields');
+
+            const res = await fetch(API_URL + '/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, oldPass, newPass })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Password changed!');
+                closeModal('change-pass-modal');
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function giveAllTime() {
+            const days = document.getElementById('admin-days').value;
+            if (!days) return;
+            const res = await fetch(API_URL + '/admin/give-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days: parseInt(days) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Time given to all users.');
+                refreshTime();
+            }
         }
     </script>
 </body>
