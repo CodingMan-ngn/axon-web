@@ -271,7 +271,7 @@
         <button class="btn" style="width: auto; padding: 8px 12px; margin: 0;" onclick="copyKey()">Copy</button>
     </div>
 
-        <script>
+    <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
         let currentRole = 'user';
@@ -328,7 +328,7 @@
                 }
             }
 
-                       const params = new URLSearchParams(window.location.search);
+            const params = new URLSearchParams(window.location.search);
             
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
@@ -359,6 +359,7 @@
                 window.history.replaceState({}, document.title, "/");
                 showToast('Error: Session expired. Please try again.');
             }
+        };
 
         function showKeyModal() {
             document.getElementById('key-text').innerText = currentUser;
@@ -560,7 +561,7 @@
             });
         }
 
-                    async function startPlan(planId) {
+        async function startPlan(planId) {
             if (userActivePlanId && userActivePlanId !== planId) {
                 return showToast('You already have an active plan. Finish it first.');
             }
