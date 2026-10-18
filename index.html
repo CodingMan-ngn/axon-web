@@ -47,13 +47,14 @@
         .balance { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; color: var(--text-muted); margin-bottom: 20px; }
         .card-desc { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
         
-        .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+        .ad-row { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); margin-bottom: 10px;}
         .ad-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
         .ad-info { flex: 1; }
         .ad-title { font-size: 14px; font-weight: 700; }
         .ad-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .btn-start { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
-        
+        .btn-disabled { background: #333; color: #666; cursor: not-allowed; }
+
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #333; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); cursor: pointer; position: relative; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .avatar input { display: none; }
@@ -67,19 +68,18 @@
         .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
-        /* Admin specific */
         .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .btn-danger:hover { background: rgba(239, 83, 80, 0.2); }
         .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .btn-warn:hover { background: rgba(255, 183, 77, 0.2); }
 
-        /* Countdown Popup */
         #countdown-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); }
         .countdown-box { background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .countdown-timer { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
         .time-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px 20px; min-width: 70px; }
         .time-block span { display: block; font-size: 32px; font-weight: 900; font-family: monospace; color: var(--accent); }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
+
+        .plan-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .plan-active { border-color: var(--accent); background: rgba(76, 175, 80, 0.05); }
     </style>
 </head>
 <body data-theme="dark">
@@ -135,23 +135,13 @@
                     <p class="card-desc">Earn Windows time below or redeem a key, then sign into the app with this account.</p>
                 </div>
 
+                <!-- Plan Section -->
                 <div class="card">
                     <div class="card-header">
-                        <div>
-                            <div class="card-title">Earn Time</div>
-                            <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 0 0;" id="ad-progress-text">Complete the ad steps.</p>
-                        </div>
+                        <div class="card-title">Earn Time Plans</div>
                     </div>
-                    <div class="ad-row">
-                        <div class="ad-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        </div>
-                        <div class="ad-info">
-                            <div class="ad-title">BoostyLink</div>
-                            <div class="ad-desc" id="ad-desc-text">1 checkpoint · 1 day</div>
-                        </div>
-                        <button class="btn-start" onclick="startAd()">Start</button>
-                    </div>
+                    <p class="card-desc" style="margin-bottom: 15px;">Select a plan below. You can only have one active plan at a time.</p>
+                    <div id="plans-list"></div>
                 </div>
             </div>
 
@@ -179,18 +169,17 @@
             <div id="tab-admin" class="hidden">
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title" style="color: #ef5350;">Admin Settings</div>
+                        <div class="card-title" style="color: #ef5350;">Admin: Create Plan</div>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-                        <span style="font-size: 13px; color: var(--text-muted);">Ad Gateways required for 1 Day:</span>
-                        <input id="admin-gateway-count" type="number" min="1" max="10" style="width: 80px; margin: 0;" />
-                        <button class="btn" style="width: auto; margin: 0; padding: 8px 16px;" onclick="saveGatewaySettings()">Save</button>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <input id="plan-name" type="text" placeholder="Plan Name (e.g. Quick Boost)" />
+                        <div style="display: flex; gap: 10px;">
+                            <input id="plan-gateways" type="number" placeholder="Ad Gateways (e.g. 2)" />
+                            <input id="plan-days" type="number" placeholder="Days Rewarded (e.g. 1)" />
+                            <button class="btn" style="width: auto; margin: 0;" onclick="createPlan()">Create Plan</button>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <span style="font-size: 13px; color: var(--text-muted);">Give All Users Time (Days):</span>
-                        <input id="admin-days-all" type="number" style="width: 80px; margin: 0;" />
-                        <button class="btn" style="width: auto; margin: 0; padding: 8px 16px;" onclick="giveAllTime()">Give</button>
-                    </div>
+                    <div id="admin-plans-list" style="margin-top: 20px;"></div>
                 </div>
 
                 <div class="card">
@@ -214,6 +203,7 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div class="modal" id="change-pass-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0;">Change Password</h2>
@@ -226,7 +216,6 @@
         </div>
     </div>
 
-    <!-- Countdown Modal -->
     <div id="countdown-modal">
         <div class="countdown-box">
             <h2 style="margin: 0 0 10px 0; font-size: 24px;">Time Added!</h2>
@@ -248,6 +237,9 @@
         let isLogin = true;
         let allUsers = [];
         let countdownInterval = null;
+        let availablePlans = [];
+        let userActivePlanId = null;
+        let userAdSteps = 0;
 
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
@@ -259,7 +251,14 @@
             }).catch(() => {});
 
             const savedUser = localStorage.getItem('axon_user');
-            if (savedUser) {
+            const savedRole = localStorage.getItem('axon_role');
+
+            if (savedUser && savedRole) {
+                document.getElementById('auth-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'block';
+                document.getElementById('time-pill').innerText = 'loading...';
+                document.getElementById('hero-name').innerText = '...';
+
                 const res = await fetch(API_URL + '/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -269,11 +268,12 @@
                 
                 if (data.valid || data.reason === 'No time. Complete an ad on the website.') {
                     currentUser = savedUser;
-                    currentRole = localStorage.getItem('axon_role') || 'user';
+                    currentRole = savedRole;
                     showDashboard();
                 } else {
                     localStorage.removeItem('axon_user');
                     localStorage.removeItem('axon_role');
+                    window.location.reload();
                 }
             }
 
@@ -292,7 +292,6 @@
 
         function showCountdownPopup() {
             document.getElementById('countdown-modal').style.display = 'flex';
-            // Start a dummy countdown of 24h for visual effect
             let target = new Date();
             target.setDate(target.getDate() + 1);
             
@@ -383,7 +382,7 @@
             window.location.reload();
         }
 
-        function showDashboard() {
+        async function showDashboard() {
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
@@ -404,7 +403,74 @@
                 img.style.display = 'block';
             }
 
+            await loadUserPlanStatus();
             refreshTime();
+        }
+
+        async function loadUserPlanStatus() {
+            const res = await fetch(API_URL + '/user/plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+            const data = await res.json();
+            userActivePlanId = data.active_plan_id;
+            userAdSteps = data.steps || 0;
+
+            // Load Plans
+            const plansRes = await fetch(API_URL + '/plans');
+            const plansData = await plansRes.json();
+            availablePlans = plansData.plans || [];
+            
+            renderPlans();
+        }
+
+        function renderPlans() {
+            const container = document.getElementById('plans-list');
+            container.innerHTML = '';
+            
+            availablePlans.forEach(plan => {
+                const isActive = userActivePlanId === plan.id;
+                const isLocked = userActivePlanId && userActivePlanId !== plan.id;
+                
+                let progress = '';
+                if (isActive) {
+                    progress = `<div style="font-size:12px; color:var(--accent); margin-top:4px;">Progress: ${userAdSteps} / ${plan.gateway_count}</div>`;
+                }
+
+                const btnClass = isActive ? 'btn-start' : (isLocked ? 'btn-start btn-disabled' : 'btn-start');
+                const btnText = isActive ? 'Continue' : (isLocked ? 'Locked' : 'Start');
+                const btnAction = isLocked ? '' : `onclick="startPlan(${plan.id})"`;
+
+                container.innerHTML += `
+                    <div class="plan-card ${isActive ? 'plan-active' : ''}">
+                        <div>
+                            <div class="ad-title">${plan.name}</div>
+                            <div class="ad-desc">${plan.gateway_count} Ad Steps · ${plan.days_rewarded} Days</div>
+                            ${progress}
+                        </div>
+                        <button class="${btnClass}" ${btnAction}>${btnText}</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function startPlan(planId) {
+            if (userActivePlanId && userActivePlanId !== planId) {
+                return alert('You already have an active plan. Finish it first.');
+            }
+
+            const res = await fetch(API_URL + '/user/start-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, plan_id: planId })
+            });
+            const data = await res.json();
+            
+            if (data.error) return alert(data.error);
+            
+            // Redirect to Ad
+            window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
         async function refreshTime() {
@@ -415,31 +481,26 @@
             });
             const data = await res.json();
             
-            if (data.valid && data.expires) {
+            if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
                 const diffMs = expires - now;
                 
-                if (diffMs > 0) {
-                    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    
-                    document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
-                    document.getElementById('balance-badge').className = 'badge time';
-                    document.getElementById('balance-badge').innerText = 'Active';
-                    document.getElementById('balance-time').innerText = `${days}d ${hours}h 0m`;
-                    return;
-                }
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
+                document.getElementById('balance-badge').className = 'badge time';
+                document.getElementById('balance-badge').innerText = 'Active';
+                document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
+                return;
             }
             
             document.getElementById('time-pill').innerText = 'no time';
             document.getElementById('balance-badge').className = 'badge empty';
             document.getElementById('balance-badge').innerText = 'Empty';
             document.getElementById('balance-time').innerText = '0m';
-        }
-
-        function startAd() {
-            window.location.href = `https://boostylink.com/RNY95YRb?key=${currentUser}`;
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -481,28 +542,54 @@
         }
 
         // --- Admin Logic ---
+        async function createPlan() {
+            const name = document.getElementById('plan-name').value;
+            const gateways = document.getElementById('plan-gateways').value;
+            const days = document.getElementById('plan-days').value;
+            if (!name || !gateways || !days) return alert('Fill all fields');
+
+            const res = await fetch(API_URL + '/admin/create-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, gateways: parseInt(gateways), days: parseInt(days) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Plan created!');
+                loadAdminUsers();
+            }
+        }
+
+        async function deletePlan(id) {
+            if (!confirm('Delete this plan?')) return;
+            await fetch(API_URL + '/admin/delete-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            loadAdminUsers();
+        }
+
         async function loadAdminUsers() {
+            // Load Users
             const res = await fetch(API_URL + '/admin/users');
             const data = await res.json();
             allUsers = data.users || [];
             renderAdminTable(allUsers);
 
-            const settingsRes = await fetch(API_URL + '/admin/settings');
-            const settingsData = await settingsRes.json();
-            document.getElementById('admin-gateway-count').value = settingsData.gateway_count || 1;
-        }
-
-        async function saveGatewaySettings() {
-            const count = document.getElementById('admin-gateway-count').value;
-            if (!count || count < 1) return alert('Must be at least 1');
-            
-            const res = await fetch(API_URL + '/admin/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ gateway_count: parseInt(count) })
+            // Load Plans
+            const plansRes = await fetch(API_URL + '/plans');
+            const plansData = await plansRes.json();
+            const adminPlans = document.getElementById('admin-plans-list');
+            adminPlans.innerHTML = '';
+            plansData.plans.forEach(p => {
+                adminPlans.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <span>${p.name} (${p.gateway_count} steps · ${p.days_rewarded} days)</span>
+                        <button class="btn-danger" onclick="deletePlan(${p.id})">Delete</button>
+                    </div>
+                `;
             });
-            const data = await res.json();
-            if (data.success) alert('Gateway count saved!');
         }
 
         function filterUsers() {
@@ -550,54 +637,27 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: email, days: parseInt(days) })
             });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Time given to ${email}`);
-                loadAdminUsers();
-            }
+            if (res.ok) { alert(`Time given to ${email}`); loadAdminUsers(); }
         }
 
         async function removeUser(email) {
-            if (!confirm(`Are you sure you want to remove ${email}? This cannot be undone.`)) return;
-            
-            const res = await fetch(API_URL + '/admin/remove-user', {
+            if (!confirm(`Are you sure you want to remove ${email}?`)) return;
+            await fetch(API_URL + '/admin/remove-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: email })
             });
-            const data = await res.json();
-            if (data.success) {
-                alert(`User ${email} removed.`);
-                loadAdminUsers();
-            }
+            loadAdminUsers();
         }
 
         async function resetHWID(email) {
-            const res = await fetch(API_URL + '/admin/reset-hwid', {
+            await fetch(API_URL + '/admin/reset-hwid', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: email })
             });
-            const data = await res.json();
-            if (data.success) {
-                alert(`HWID reset for ${email}`);
-                loadAdminUsers();
-            }
-        }
-
-        async function giveAllTime() {
-            const days = document.getElementById('admin-days-all').value;
-            if (!days) return;
-            const res = await fetch(API_URL + '/admin/give-all', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ days: parseInt(days) })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('Time given to all users.');
-                loadAdminUsers();
-            }
+            alert(`HWID reset for ${email}`);
+            loadAdminUsers();
         }
 
         function uploadAvatar(event) {
