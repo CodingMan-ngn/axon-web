@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Axon - Login</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #111; border: 1px solid #222; padding: 40px; border-radius: 12px; width: 300px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: white; color: black; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none; }
+        .dashboard { width: 400px; text-align: left; }
+        .card { background: #1a1a1a; padding: 20px; border-radius: 8px; margin-top: 10px; }
+        .btn-ad { background: #4caf50; color: white; }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="login-box" class="box">
+        <h2>Sign in to Axon</h2>
+        <input id="email" type="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password">
+        <button onclick="login()">Sign In</button>
+        <button onclick="register()" style="background: transparent; color: white; border: 1px solid #444;">Create Account</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-box" class="box dashboard hidden">
+        <h2>Overview</h2>
+        <div class="card">
+            <p>Expires: <strong id="expires">No time</strong></p>
+            <p>HWID: <strong id="hwid">Not bound</strong></p>
+        </div>
+        <div class="card">
+            <h3>Earn Time</h3>
+            <p>Complete an ad to get 1 day.</p>
+            <button class="btn-ad" onclick="earnTime()">Complete BoostyLink Task</button>
+        </div>
+    </div>
+
+    <script>
+        // Replace this with your actual Worker URL
+        const API_URL = 'https://axon-api.l26064135.workers.dev';
+        let currentEmail = '';
+
+        async function register() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if (!email || !pass) return alert('Fill all fields');
+            
+            const res = await fetch(API_URL + '/register', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            if (res.ok) alert('Account created! You can now sign in.');
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if (!email || !pass) return alert('Fill all fields');
+            
+            currentEmail = email;
+            
+            const res = await fetch(API_URL + '/verify', {
+                method: 'POST',
+                body: JSON.stringify({ email, hwid: 'web-browser' })
+            });
+            const data = await res.json();
+            
+            if (data.valid || data.reason === 'No time. Complete an ad on the website.') {
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('dashboard-box').classList.remove('hidden');
+                document.getElementById('expires').innerText = data.valid ? 'Active' : 'No time';
+            } else {
+                alert(data.reason);
+            }
+        }
+
+        function earnTime() {
+            const boostyUrl = `https://boostylink.com/YOUR_LINK?email=${currentEmail}`;
+            window.location.href = boostyUrl;
+        }
+    </script>
+</body>
+</html>
