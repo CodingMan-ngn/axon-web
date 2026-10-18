@@ -549,7 +549,7 @@
             });
         }
 
-        async function startPlan(planId) {
+                async function startPlan(planId) {
             if (userActivePlanId && userActivePlanId !== planId) {
                 return showToast('You already have an active plan. Finish it first.');
             }
@@ -562,7 +562,6 @@
             const data = await res.json();
             if (data.error) return showToast(data.error);
 
-            // Generate one-time reward token
             const tokenRes = await fetch(API_URL + '/reward/init', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -571,7 +570,6 @@
             const tokenData = await tokenRes.json();
             if (tokenData.error) return showToast(tokenData.error);
 
-            // Pass raw UUID to BoostyLink
             window.location.href = `https://boostylink.com/RNY95YRb?key=${tokenData.token}`;
         }
 
