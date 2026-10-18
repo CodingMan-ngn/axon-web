@@ -548,7 +548,7 @@
             });
         }
 
-                async function startPlan(planId) {
+                      async function startPlan(planId) {
             if (userActivePlanId && userActivePlanId !== planId) {
                 return showToast('You already have an active plan. Finish it first.');
             }
@@ -562,7 +562,7 @@
             
             if (data.error) return showToast(data.error);
             
-            // The URL now uses the PATH instead of query string
+            // Path-based URL (no ?key=)
             window.location.href = `https://boostylink.com/RNY95YRb/${currentUser}`;
         }
 
