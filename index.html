@@ -227,6 +227,16 @@
         </div>
     </div>
 
+    <!-- Gift Notification Modal -->
+    <div class="modal" id="gift-modal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🎁</div>
+            <h2 style="margin-top: 0;">Gift Received!</h2>
+            <p id="gift-text" style="color: var(--text-muted); margin-bottom: 20px;">You have been gifted time by the Admin.</p>
+            <button class="btn" onclick="dismissGift()">Claim & Dismiss</button>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
@@ -267,6 +277,7 @@
                     currentUser = savedUser;
                     currentRole = savedRole;
                     showDashboard();
+                    checkGiftNotification(data.gift);
                 } else {
                     localStorage.removeItem('axon_user');
                     localStorage.removeItem('axon_role');
@@ -285,6 +296,23 @@
                 window.history.replaceState({}, document.title, "/");
                 alert('Ad step completed! Complete more steps to unlock time.');
             }
+        }
+
+        function checkGiftNotification(giftText) {
+            if (giftText) {
+                document.getElementById('gift-text').innerText = giftText;
+                document.getElementById('gift-modal').style.display = 'flex';
+            }
+        }
+
+        async function dismissGift() {
+            document.getElementById('gift-modal').style.display = 'none';
+            // Clear from DB so it doesn't show again
+            await fetch(API_URL + '/user/clear-gift', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
         }
 
         function showCountdownPopup() {
@@ -483,7 +511,8 @@
             });
             const data = await res.json();
             
-            // FIX: Check if data.expires exists and is in the future
+            checkGiftNotification(data.gift);
+
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
                 const now = new Date();
@@ -498,7 +527,6 @@
                 document.getElementById('balance-badge').innerText = 'Active';
                 document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
             } else {
-                // No time
                 document.getElementById('time-pill').innerText = 'no time';
                 document.getElementById('balance-badge').className = 'badge empty';
                 document.getElementById('balance-badge').innerText = 'Empty';
