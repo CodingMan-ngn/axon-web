@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axon</title>
     <style>
-        :root { --bg: #0a0a0a; --panel: #111; --border: #222; --text: #fff; --text-muted: #888; --accent: #4caf50; }
+        :root { --bg: #0a0a0a; --panel: #111; --border: #222; --text: #fff; --text-muted: #888; --accent: #4caf50; --danger: #ef5350; }
         [data-theme="light"] { --bg: #f5f5f5; --panel: #fff; --border: #ddd; --text: #000; --text-muted: #666; }
         body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
         
         .logo-mark { width: 40px; height: 40px; background: var(--text); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; font-family: monospace; }
 
-        /* Auth */
         #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
         .auth-box { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
         .auth-box h2 { margin: 0 0 20px 0; font-weight: 800; letter-spacing: 1px; }
@@ -20,11 +19,10 @@
         .btn { width: 100%; padding: 12px; background: var(--text); color: var(--bg); font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 14px; transition: 0.2s; }
         .btn:hover { opacity: 0.8; }
         .btn-link { background: transparent; color: var(--text-muted); font-size: 12px; margin-top: 15px; border: none; cursor: pointer; text-decoration: underline; }
-        .error-msg { color: #ef5350; font-size: 12px; margin-top: 10px; min-height: 16px; font-weight: 600; }
+        .error-msg { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 16px; font-weight: 600; }
         .stat-bar { position: absolute; top: 20px; right: 20px; font-size: 12px; color: var(--text-muted); background: var(--panel); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
         .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
 
-        /* Dashboard */
         #dashboard-view { display: none; }
         .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border); }
         .nav-right { display: flex; gap: 12px; align-items: center; }
@@ -36,7 +34,6 @@
         h1 span { color: var(--text-muted); }
         .subtitle { color: var(--text-muted); margin-bottom: 30px; font-size: 15px; }
 
-        /* Tabs */
         .tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
         .tab { padding: 10px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--text); border-bottom-color: var(--text); }
@@ -57,12 +54,10 @@
         .ad-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
         .btn-start { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
         
-        /* Profile Avatar */
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #333; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); cursor: pointer; position: relative; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .avatar input { display: none; }
 
-        /* Admin Table */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         th { color: var(--text-muted); font-weight: 600; }
@@ -71,11 +66,16 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: var(--panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; width: 400px; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
+        /* Admin specific */
+        .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-danger:hover { background: rgba(239, 83, 80, 0.2); }
+        .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-warn:hover { background: rgba(255, 183, 77, 0.2); }
     </style>
 </head>
 <body data-theme="dark">
 
-    <!-- AUTH VIEW -->
     <div id="auth-view">
         <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Keys</div>
         <div class="logo-mark" style="margin-bottom: 20px;">A</div>
@@ -90,7 +90,6 @@
         </div>
     </div>
 
-    <!-- DASHBOARD VIEW -->
     <div id="dashboard-view">
         <div class="nav">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -109,14 +108,12 @@
             <h1>Hey, <span id="hero-name">User</span></h1>
             <p class="subtitle">Your time, downloads and ways to earn more.</p>
 
-            <!-- TABS -->
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('home')">Home</div>
                 <div class="tab" onclick="switchTab('profile')">Profile</div>
                 <div class="tab hidden" id="admin-tab" onclick="switchTab('admin')">Admin Panel</div>
             </div>
 
-            <!-- HOME TAB -->
             <div id="tab-home">
                 <div class="card">
                     <div class="card-header">
@@ -150,7 +147,6 @@
                 </div>
             </div>
 
-            <!-- PROFILE TAB -->
             <div id="tab-profile" class="hidden">
                 <div class="card">
                     <div class="card-header">
@@ -171,7 +167,6 @@
                 </div>
             </div>
 
-            <!-- ADMIN TAB -->
             <div id="tab-admin" class="hidden">
                 <div class="card">
                     <div class="card-header">
@@ -193,7 +188,8 @@
                             <tr>
                                 <th>Username</th>
                                 <th>Time Left</th>
-                                <th>Give Time (Days)</th>
+                                <th>Give Time</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="admin-user-list"></tbody>
@@ -203,7 +199,6 @@
         </div>
     </div>
 
-    <!-- CHANGE PASSWORD MODAL -->
     <div class="modal" id="change-pass-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0;">Change Password</h2>
@@ -223,7 +218,6 @@
         let isLogin = true;
         let allUsers = [];
 
-        // Force Login Screen
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
         document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
@@ -339,7 +333,6 @@
                 document.getElementById('admin-tab').classList.remove('hidden');
             }
 
-            // Load saved avatar
             const savedAvatar = localStorage.getItem('axon_avatar');
             if (savedAvatar) {
                 document.getElementById('avatar-initial').style.display = 'none';
@@ -457,6 +450,12 @@
                                 <button class="btn" style="width: auto; margin: 0; padding: 6px 12px;" onclick="giveUserTime('${u.email}')">Give</button>
                             </div>
                         </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-warn" onclick="resetHWID('${u.email}')">Reset HWID</button>
+                                <button class="btn-danger" onclick="removeUser('${u.email}')">Remove</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -477,7 +476,34 @@
             }
         }
 
-        // Avatar Upload
+        async function removeUser(email) {
+            if (!confirm(`Are you sure you want to remove ${email}? This cannot be undone.`)) return;
+            
+            const res = await fetch(API_URL + '/admin/remove-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: email })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`User ${email} removed.`);
+                loadAdminUsers();
+            }
+        }
+
+        async function resetHWID(email) {
+            const res = await fetch(API_URL + '/admin/reset-hwid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: email })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`HWID reset for ${email}`);
+                loadAdminUsers();
+            }
+        }
+
         function uploadAvatar(event) {
             const file = event.target.files[0];
             if (!file) return;
