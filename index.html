@@ -330,29 +330,10 @@
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    showToast('Verifying ad completion...');
-                    
-                    fetch(API_URL + '/reward/claim', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: currentUser })
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.error) {
-                            showToast('Error: ' + data.error);
-                            loadUserPlanStatus();
-                        } else if (data.completed) {
-                            showCountdownPopup();
-                            showKeyModal();
-                            refreshTime();
-                            loadUserPlanStatus();
-                        } else {
-                            showToast('Ad step completed! Complete more steps to unlock time.');
-                            loadUserPlanStatus();
-                        }
-                    })
-                    .catch(() => showToast('Failed to verify ad. Please try again.'));
+                    showToast('Time added successfully!');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                    showCountdownPopup();
                 }
             }
         };
