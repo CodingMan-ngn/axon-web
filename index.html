@@ -580,14 +580,22 @@
                 const now = new Date();
                 const diffMs = expires - now;
                 
-                const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                // CHANGED TO FLOOR TO PREVENT ROUNDING UP TO 2 DAYS
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                 
-                timePill.innerText = `${days}d ${hours}h`;
+                // If days is 0 but there's time left, it will show 0d Xh. If you want it to just show hours:
+                if (days > 0) {
+                    timePill.innerText = `${days}d ${hours}h`;
+                    balanceTime.innerText = `${days}d ${hours}h ${mins}m`;
+                } else {
+                    timePill.innerText = `${hours}h ${mins}m`;
+                    balanceTime.innerText = `${hours}h ${mins}m`;
+                }
+                
                 badge.className = 'badge time';
                 badge.innerText = 'Active';
-                balanceTime.innerText = `${days}d ${hours}h ${mins}m`;
 
                 document.getElementById('floating-key').innerText = licenseKey;
                 document.getElementById('key-bar').classList.add('on');
