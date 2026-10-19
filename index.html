@@ -200,10 +200,11 @@
                     <div class="card-header">
                         <div class="card-title">Manage Users</div>
                     </div>
-                    <input id="admin-search" type="text" placeholder="Search username..." oninput="filterUsers()" style="margin-bottom: 15px;" />
+                    <input id="admin-search" type="text" placeholder="Search ID or Username..." oninput="filterUsers()" style="margin-bottom: 15px;" />
                     <table id="admin-table">
                         <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>Username</th>
                                 <th>Time Left</th>
                                 <th>Give Time</th>
@@ -271,7 +272,8 @@
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
-        let licenseKey = ''; // Separated the key from the username
+        let licenseKey = ''; 
+        let userId = ''; // NEW: User ID
         let currentRole = 'user';
         let isLogin = true;
         let allUsers = [];
@@ -300,11 +302,13 @@
 
             const savedUser = localStorage.getItem('axon_user');
             const savedKey = localStorage.getItem('axon_key');
+            const savedId = localStorage.getItem('axon_id');
             const savedRole = localStorage.getItem('axon_role');
 
-            if (savedUser && savedKey && savedRole) {
+            if (savedUser && savedKey && savedId && savedRole) {
                 currentUser = savedUser;
                 licenseKey = savedKey;
+                userId = savedId;
                 currentRole = savedRole;
                 showDashboard();
             }
@@ -335,14 +339,15 @@
                             if (res.ok) {
                                 if (data.plan_completed) {
                                     showToast('Time added successfully!');
-                                    showCountdownPopup();
+                                    // NEW: Set exact added days to popup
+                                    const addedDays = data.added_days || 1;
+                                    showCountdownPopup(addedDays);
                                 } else {
                                     showToast('Gateway completed! Finish the remaining steps to get your time.');
                                 }
                                 refreshTime(); 
                                 loadUserPlanStatus();
                             } else {
-                                // CHECK FOR 'not_verified' TO KEEP LOOPING
                                 if (data.error === 'not_verified') {
                                     setTimeout(() => attemptClaim(tries + 1), 1000);
                                 } else {
@@ -389,10 +394,12 @@
             });
         }
 
-        function showCountdownPopup() {
+        function showCountdownPopup(addedDays = 1) {
             document.getElementById('countdown-modal').style.display = 'flex';
+            
+            // Set the countdown to the exact added days
             let target = new Date();
-            target.setDate(target.getDate() + 1);
+            target.setDate(target.getDate() + addedDays);
             
             if (countdownInterval) clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
@@ -465,9 +472,11 @@
             if (isLogin) {
                 currentUser = data.username;
                 licenseKey = data.key;
+                userId = data.user_id;
                 currentRole = data.role;
                 localStorage.setItem('axon_user', currentUser);
                 localStorage.setItem('axon_key', licenseKey);
+                localStorage.setItem('axon_id', userId);
                 localStorage.setItem('axon_role', currentRole);
                 showDashboard();
             } else {
@@ -480,6 +489,7 @@
         function logout() {
             localStorage.removeItem('axon_user');
             localStorage.removeItem('axon_key');
+            localStorage.removeItem('axon_id');
             localStorage.removeItem('axon_role');
             window.location.reload();
         }
@@ -514,7 +524,7 @@
             const res = await fetch(API_URL + '/user/plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser }) // Send username here
+                body: JSON.stringify({ username: currentUser }) 
             });
             const data = await res.json();
             userActivePlanId = data.active_plan_id;
@@ -570,7 +580,7 @@
             const res = await fetch(API_URL + '/user/start-plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, plan_id: planId }) // Send username here
+                body: JSON.stringify({ username: currentUser, plan_id: planId }) 
             });
             const data = await res.json();
             
@@ -583,7 +593,7 @@
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: licenseKey, hwid: 'web-browser' }) // Send licenseKey here
+                body: JSON.stringify({ key: licenseKey, hwid: 'web-browser' }) 
             });
             const data = await res.json();
             
@@ -596,7 +606,8 @@
                 const now = new Date();
                 const diffMs = expires - now;
                 
-                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                // Round up to fix the "2 days" vs "1 day" mismatch
+                const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                 
@@ -707,7 +718,7 @@
 
         function filterUsers() {
             const query = document.getElementById('admin-search').value.toLowerCase();
-            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(query));
+            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(query) || (u.user_id && u.user_id.toLowerCase().includes(query)));
             renderAdminTable(filtered);
         }
 
@@ -723,18 +734,19 @@
 
                 tbody.innerHTML += `
                     <tr>
+                        <td style="font-weight: 600; color: var(--accent); font-family: monospace;">${u.user_id || 'N/A'}</td>
                         <td style="font-weight: 600;">${u.username}</td>
                         <td>${timeLeft}</td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <input id="days-${u.username}" type="number" placeholder="Days" style="width: 60px; margin: 0; padding: 6px;" />
-                                <button class="btn" style="width: auto; margin: 0; padding: 6px 12px;" onclick="giveUserTime('${u.username}')">Give</button>
+                                <input id="days-${u.user_id}" type="number" placeholder="Days" style="width: 60px; margin: 0; padding: 6px;" />
+                                <button class="btn" style="width: auto; margin: 0; padding: 6px 12px;" onclick="giveUserTime('${u.user_id}')">Give</button>
                             </div>
                         </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <button class="btn-warn" onclick="resetHWID('${u.username}')">Reset HWID</button>
-                                <button class="btn-danger" onclick="removeUser('${u.username}')">Remove</button>
+                                <button class="btn-warn" onclick="resetHWID('${u.user_id}')">Reset HWID</button>
+                                <button class="btn-danger" onclick="removeUser('${u.user_id}')">Remove</button>
                             </div>
                         </td>
                     </tr>
@@ -742,34 +754,34 @@
             });
         }
 
-        async function giveUserTime(username) {
-            const days = document.getElementById(`days-${username}`).value;
+        async function giveUserTime(user_id) {
+            const days = document.getElementById(`days-${user_id}`).value;
             if (!days) return;
             const res = await fetch(API_URL + '/admin/give-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username, days: parseInt(days) })
+                body: JSON.stringify({ user_id: user_id, days: parseInt(days) })
             });
-            if (res.ok) { showToast(`Time given to ${username}`); loadAdminUsers(); }
+            if (res.ok) { showToast(`Time given to ${user_id}`); loadAdminUsers(); }
         }
 
-        async function removeUser(username) {
-            if (!confirm(`Are you sure you want to remove ${username}?`)) return;
+        async function removeUser(user_id) {
+            if (!confirm(`Are you sure you want to remove ${user_id}?`)) return;
             await fetch(API_URL + '/admin/remove-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username })
+                body: JSON.stringify({ user_id: user_id })
             });
             loadAdminUsers();
         }
 
-        async function resetHWID(username) {
+        async function resetHWID(user_id) {
             await fetch(API_URL + '/admin/reset-hwid', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username })
+                body: JSON.stringify({ user_id: user_id })
             });
-            showToast(`HWID reset for ${username}`);
+            showToast(`HWID reset for ${user_id}`);
             loadAdminUsers();
         }
 
