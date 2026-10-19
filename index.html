@@ -191,7 +191,10 @@
         .ad-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
         .ad-badge { background: var(--text); color: var(--bg); font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; letter-spacing: 0.5px; }
         .ad-desc { font-size: 13px; color: var(--text-muted); }
-        .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+        
+        /* Status */
+        .status-active { color: var(--accent); font-weight: 800; font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .status-inactive { color: var(--danger); font-weight: 800; font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
         
         /* Profile Centering */
         #tab-profile {
@@ -832,15 +835,17 @@
 
             availablePlans.forEach(plan => {
                 const isActive = userActivePlanId === plan.id;
-                const isLocked = userActivePlanId && userActivePlanId !== plan.id;
                 
-                let progress = '';
+                // NEW LOGIC: Show Active or Inactive instead of progress
+                let statusHtml = '';
                 if (isActive) {
-                    progress = `<div class="ad-progress">Progress: ${userAdSteps} / ${plan.gateway_count}</div>`;
+                    statusHtml = `<div class="status-active">Active</div>`;
+                } else {
+                    statusHtml = `<div class="status-inactive">Inactive</div>`;
                 }
 
-                const cardClass = isLocked ? 'ad-provider-card locked' : 'ad-provider-card';
-                const onClick = isLocked ? '' : `onclick="startPlan(${plan.id})"`;
+                const cardClass = 'ad-provider-card';
+                const onClick = `onclick="startPlan(${plan.id})"`;
 
                 container.innerHTML += `
                     <div class="${cardClass}" ${onClick}>
@@ -850,7 +855,7 @@
                         <div class="ad-info">
                             <div class="ad-title">${plan.name} <span class="ad-badge">${plan.gateway_count} checkpoints</span></div>
                             <div class="ad-desc">Complete ${plan.gateway_count} quick tasks. When done, you get ${plan.days_rewarded} days.</div>
-                            ${progress}
+                            ${statusHtml}
                         </div>
                         <div style="color: var(--text-muted); font-size: 24px;">›</div>
                     </div>
