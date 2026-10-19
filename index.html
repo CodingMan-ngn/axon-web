@@ -72,6 +72,7 @@
 
         .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-green { background: rgba(76, 175, 80, 0.1); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
 
         #countdown-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); }
         .countdown-box { background: var(--panel); border: 1px solid var(--border); padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
@@ -206,6 +207,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Username</th>
+                                <th>Role</th>
                                 <th>Time Left</th>
                                 <th>Give Time</th>
                                 <th>Actions</th>
@@ -746,10 +748,25 @@
                     ? Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)) + ' days'
                     : 'Expired';
 
+                // ADMIN ROLE TOGGLE
+                let roleColor = u.role === 'admin' ? 'var(--accent)' : '#888';
+                let roleButton = '';
+                
+                if (u.username !== 'invisibleadmin') {
+                    if (u.role === 'admin') {
+                        roleButton = `<button class="btn-danger" style="font-size:11px; padding:4px 8px;" onclick="toggleRole('${u.user_id}', 'user')">Demote</button>`;
+                    } else {
+                        roleButton = `<button class="btn-green" style="font-size:11px; padding:4px 8px;" onclick="toggleRole('${u.user_id}', 'admin')">Promote</button>`;
+                    }
+                } else {
+                    roleButton = `<span style="font-size:11px; color:#666;">-</span>`;
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td style="font-weight: 600; color: var(--accent); font-family: monospace;">${u.user_id || 'N/A'}</td>
                         <td style="font-weight: 600;">${u.username}</td>
+                        <td style="color: ${roleColor}; font-weight: 700;">${u.role.toUpperCase()}</td>
                         <td>${timeLeft}</td>
                         <td>
                             <div style="display: flex; gap: 5px;">
@@ -759,8 +776,9 @@
                         </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <button class="btn-warn" onclick="resetHWID('${u.user_id}')">Reset HWID</button>
-                                <button class="btn-danger" onclick="removeUser('${u.user_id}')">Remove</button>
+                                <button class="btn-warn" onclick="resetHWID('${u.user_id}')">HWID</button>
+                                ${roleButton}
+                                <button class="btn-danger" onclick="removeUser('${u.user_id}')">X</button>
                             </div>
                         </td>
                     </tr>
@@ -777,6 +795,19 @@
                 body: JSON.stringify({ user_id: user_id, days: parseInt(days) })
             });
             if (res.ok) { showToast(`Time given to ${user_id}`); loadAdminUsers(); }
+        }
+
+        async function toggleRole(user_id, newRole) {
+            if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+            const res = await fetch(API_URL + '/admin/toggle-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user_id, role: newRole })
+            });
+            if (res.ok) {
+                showToast(`Role updated to ${newRole}`);
+                loadAdminUsers();
+            }
         }
 
         async function removeUser(user_id) {
