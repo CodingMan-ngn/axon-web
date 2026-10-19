@@ -271,6 +271,7 @@
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
+        let licenseKey = ''; // Separated the key from the username
         let currentRole = 'user';
         let isLogin = true;
         let allUsers = [];
@@ -298,34 +299,17 @@
             }).catch(() => {});
 
             const savedUser = localStorage.getItem('axon_user');
+            const savedKey = localStorage.getItem('axon_key');
             const savedRole = localStorage.getItem('axon_role');
 
-            if (savedUser && savedRole) {
-                document.getElementById('auth-view').style.display = 'none';
-                document.getElementById('dashboard-view').style.display = 'block';
-                document.getElementById('time-pill').innerText = 'loading...';
-                document.getElementById('hero-name').innerText = '...';
-
-                const res = await fetch(API_URL + '/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: savedUser, hwid: 'web-browser' })
-                });
-                const data = await res.json();
-                
-                if (data.valid || data.reason === 'No time') {
-                    currentUser = savedUser;
-                    currentRole = savedRole;
-                    showDashboard();
-                } else {
-                    localStorage.removeItem('axon_user');
-                    localStorage.removeItem('axon_role');
-                    window.location.reload();
-                }
+            if (savedUser && savedKey && savedRole) {
+                currentUser = savedUser;
+                licenseKey = savedKey;
+                currentRole = savedRole;
+                showDashboard();
             }
 
             const params = new URLSearchParams(window.location.search);
-            
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
@@ -338,15 +322,31 @@
         };
 
         function showKeyModal() {
-            document.getElementById('key-text').innerText = currentUser;
+            document.getElementById('key-text').innerText = licenseKey;
             document.getElementById('key-modal').style.display = 'flex';
-            document.getElementById('floating-key').innerText = currentUser;
+            document.getElementById('floating-key').innerText = licenseKey;
             document.getElementById('key-bar').classList.add('on');
         }
 
         function copyKey() {
-            navigator.clipboard.writeText(currentUser);
+            navigator.clipboard.writeText(licenseKey);
             showToast('Key copied to clipboard!');
+        }
+
+        function checkGiftNotification(giftText) {
+            if (giftText) {
+                document.getElementById('gift-text').innerText = giftText;
+                document.getElementById('gift-modal').style.display = 'flex';
+            }
+        }
+
+        async function dismissGift() {
+            document.getElementById('gift-modal').style.display = 'none';
+            await fetch(API_URL + '/user/clear-gift', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
         }
 
         function showCountdownPopup() {
@@ -423,9 +423,11 @@
             }
 
             if (isLogin) {
-                currentUser = data.key;
+                currentUser = data.username;
+                licenseKey = data.key;
                 currentRole = data.role;
                 localStorage.setItem('axon_user', currentUser);
+                localStorage.setItem('axon_key', licenseKey);
                 localStorage.setItem('axon_role', currentRole);
                 showDashboard();
             } else {
@@ -437,6 +439,7 @@
 
         function logout() {
             localStorage.removeItem('axon_user');
+            localStorage.removeItem('axon_key');
             localStorage.removeItem('axon_role');
             window.location.reload();
         }
@@ -445,10 +448,11 @@
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
+            // Set clean username
             document.getElementById('user-display').innerText = currentUser;
             document.getElementById('hero-name').innerText = currentUser;
             document.getElementById('profile-name').innerText = currentUser;
-            document.getElementById('main-key-display').innerText = currentUser;
+            document.getElementById('avatar-initial').innerText = currentUser.charAt(0).toUpperCase();
 
             if (currentRole === 'admin') {
                 document.getElementById('admin-tab').classList.remove('hidden');
@@ -470,7 +474,7 @@
             const res = await fetch(API_URL + '/user/plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
+                body: JSON.stringify({ username: currentUser }) // Send username here
             });
             const data = await res.json();
             userActivePlanId = data.active_plan_id;
@@ -526,7 +530,7 @@
             const res = await fetch(API_URL + '/user/start-plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, plan_id: planId })
+                body: JSON.stringify({ username: currentUser, plan_id: planId }) // Send username here
             });
             const data = await res.json();
             
@@ -539,7 +543,7 @@
             const res = await fetch(API_URL + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: currentUser, hwid: 'web-browser' })
+                body: JSON.stringify({ key: licenseKey, hwid: 'web-browser' }) // Send licenseKey here
             });
             const data = await res.json();
             
@@ -561,7 +565,7 @@
                 badge.innerText = 'Active';
                 balanceTime.innerText = `${days}d ${hours}h ${mins}m`;
 
-                document.getElementById('floating-key').innerText = currentUser;
+                document.getElementById('floating-key').innerText = licenseKey;
                 document.getElementById('key-bar').classList.add('on');
 
             } else {
