@@ -317,7 +317,6 @@
                     currentUser = savedUser;
                     currentRole = savedRole;
                     showDashboard();
-                    checkGiftNotification(data.gift);
                 } else {
                     localStorage.removeItem('axon_user');
                     localStorage.removeItem('axon_role');
@@ -348,22 +347,6 @@
         function copyKey() {
             navigator.clipboard.writeText(currentUser);
             showToast('Key copied to clipboard!');
-        }
-
-        function checkGiftNotification(giftText) {
-            if (giftText) {
-                document.getElementById('gift-text').innerText = giftText;
-                document.getElementById('gift-modal').style.display = 'flex';
-            }
-        }
-
-        async function dismissGift() {
-            document.getElementById('gift-modal').style.display = 'none';
-            await fetch(API_URL + '/user/clear-gift', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            });
         }
 
         function showCountdownPopup() {
@@ -465,7 +448,7 @@
             document.getElementById('user-display').innerText = currentUser;
             document.getElementById('hero-name').innerText = currentUser;
             document.getElementById('profile-name').innerText = currentUser;
-            document.getElementById('avatar-initial').innerText = currentUser.charAt(0).toUpperCase();
+            document.getElementById('main-key-display').innerText = currentUser;
 
             if (currentRole === 'admin') {
                 document.getElementById('admin-tab').classList.remove('hidden');
@@ -538,10 +521,6 @@
         }
 
         async function startPlan(planId) {
-            if (userActivePlanId && userActivePlanId !== planId) {
-                return showToast('You already have an active plan. Finish it first.');
-            }
-
             showToast('Generating secure gateway...');
 
             const res = await fetch(API_URL + '/user/start-plan', {
@@ -564,7 +543,9 @@
             });
             const data = await res.json();
             
-            checkGiftNotification(data.gift);
+            const timePill = document.getElementById('time-pill');
+            const badge = document.getElementById('balance-badge');
+            const balanceTime = document.getElementById('balance-time');
 
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
@@ -575,19 +556,19 @@
                 const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                 
-                document.getElementById('time-pill').innerText = `${days}d ${hours}h`;
-                document.getElementById('balance-badge').className = 'badge time';
-                document.getElementById('balance-badge').innerText = 'Active';
-                document.getElementById('balance-time').innerText = `${days}d ${hours}h ${mins}m`;
+                timePill.innerText = `${days}d ${hours}h`;
+                badge.className = 'badge time';
+                badge.innerText = 'Active';
+                balanceTime.innerText = `${days}d ${hours}h ${mins}m`;
 
                 document.getElementById('floating-key').innerText = currentUser;
                 document.getElementById('key-bar').classList.add('on');
 
             } else {
-                document.getElementById('time-pill').innerText = 'no time';
-                document.getElementById('balance-badge').className = 'badge empty';
-                document.getElementById('balance-badge').innerText = 'Empty';
-                document.getElementById('balance-time').innerText = '0m';
+                timePill.innerText = 'No Time';
+                badge.className = 'badge empty';
+                badge.innerText = 'Empty';
+                balanceTime.innerText = '0m';
 
                 document.getElementById('key-bar').classList.remove('on');
             }
