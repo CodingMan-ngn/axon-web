@@ -132,20 +132,17 @@
         }
         .btn-icon:hover { background: rgba(255,255,255,0.05); }
         
-        /* Container */
         .container { max-width: 850px; margin: 50px auto; padding: 0 20px; padding-bottom: 120px; animation: fadeUp 0.5s ease; }
         
         h1 { font-size: 42px; margin: 0 0 10px 0; letter-spacing: -1px; font-weight: 800; }
         h1 span { color: var(--text-muted); }
         .subtitle { color: var(--text-muted); margin-bottom: 40px; font-size: 16px; font-weight: 400; }
 
-        /* Tabs */
         .tabs { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 35px; }
         .tab { padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
         .tab:hover { color: var(--text); }
         .tab.active { color: var(--text); border-bottom-color: var(--text); }
 
-        /* Cards */
         .card { 
             background: var(--panel); 
             backdrop-filter: blur(10px);
@@ -172,7 +169,6 @@
         .balance svg { color: var(--text-muted); }
         .card-desc { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
         
-        /* Provider Cards */
         .ad-provider-card { 
             display: flex; align-items: center; gap: 20px; padding: 20px; 
             border: 1px solid var(--border); border-radius: 16px; 
@@ -193,7 +189,6 @@
         .ad-desc { font-size: 13px; color: var(--text-muted); }
         .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
         
-        /* Profile */
         .avatar { 
             width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); 
             overflow: hidden; display: flex; align-items: center; justify-content: center; 
@@ -202,7 +197,6 @@
         .avatar:hover { border-color: var(--text-muted); }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Admin */
         .admin-input { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; }
         .admin-input:focus { border-color: var(--text-muted); }
         
@@ -211,7 +205,6 @@
         th { color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         td { font-weight: 500; }
         
-        /* Modals */
         .modal { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); 
             display: none; align-items: center; justify-content: center; z-index: 1000; 
@@ -264,7 +257,6 @@
             box-shadow: 0 0 15px var(--danger-glow);
         }
         
-        /* Toasts */
         #toast-container { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { 
             background: var(--panel); backdrop-filter: blur(20px);
@@ -556,7 +548,6 @@
                     loadUserPlanStatus();
                 }
             } else if (params.get('success') === 'already_had_plan') {
-                // THIS IS THE NEW MESSAGE
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
                     showToast('Nice one, but you already had an active plan so no time for you rn.');
