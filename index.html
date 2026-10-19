@@ -594,6 +594,7 @@
         let userAdSteps = 0;
         let pendingPlanId = null;
         let isMaintenance = false;
+        let statsInterval = null;
 
         document.getElementById('auth-title').innerText = 'Welcome Back';
         document.getElementById('auth-btn').innerText = 'Sign In';
@@ -608,10 +609,18 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        window.onload = async () => {
+        function updateStats() {
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
-                document.getElementById('active-users').innerText = d.active || 0;
+                const el = document.getElementById('active-users');
+                if (el) el.innerText = d.active || 0;
             }).catch(() => {});
+        }
+
+        window.onload = async () => {
+            updateStats();
+            // REAL TIME UPDATE: Ping stats every 5 seconds
+            if (statsInterval) clearInterval(statsInterval);
+            statsInterval = setInterval(updateStats, 5000);
 
             // Check maintenance status FIRST
             try {
