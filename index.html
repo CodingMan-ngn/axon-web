@@ -80,7 +80,6 @@
         .time-block span { display: block; font-size: 32px; font-weight: 900; font-family: monospace; color: var(--accent); }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; }
 
-        /* Floating Key Bar */
         #key-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--panel); border-top: 1px solid var(--border);
@@ -330,7 +329,7 @@
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    showToast('Verifying ad completion...');
+                    showToast('Verifying ad completion... (up to 10s)');
                     
                     fetch(API_URL + '/reward/claim', {
                         method: 'POST',
@@ -341,10 +340,12 @@
                     .then(data => {
                         if (data.error) {
                             showToast('Error: ' + data.error);
+                            loadUserPlanStatus();
                         } else if (data.completed) {
                             showCountdownPopup();
                             showKeyModal();
                             refreshTime();
+                            loadUserPlanStatus();
                         } else {
                             showToast('Ad step completed! Complete more steps to unlock time.');
                             loadUserPlanStatus();
@@ -562,12 +563,15 @@
                 return showToast('You already have an active plan. Finish it first.');
             }
 
+            showToast('Generating secure gateway...');
+
             const res = await fetch(API_URL + '/user/start-plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser, plan_id: planId })
             });
             const data = await res.json();
+            
             if (data.error) return showToast(data.error);
 
             // Redirect to the tracked anti-bypass URL
