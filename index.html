@@ -193,7 +193,14 @@
         .ad-desc { font-size: 13px; color: var(--text-muted); }
         .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
         
-        /* Profile */
+        /* Profile Centering Fix */
+        .profile-layout { 
+            display: flex; 
+            align-items: center; 
+            gap: 24px; 
+            margin-bottom: 30px; 
+        }
+        
         .avatar { 
             width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); 
             overflow: hidden; display: flex; align-items: center; justify-content: center; 
@@ -306,7 +313,6 @@
     <div class="ambient"><div class="glow g1"></div><div class="glow g2"></div></div>
     <div id="toast-container"></div>
 
-    <!-- MAINTENANCE OVERLAY -->
     <div id="maintenance-view">
         <div class="maintenance-box">
             <h1>404</h1>
@@ -380,7 +386,7 @@
                     <div class="card-header">
                         <div class="card-title">Account Settings</div>
                     </div>
-                    <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 30px;">
+                    <div class="profile-layout">
                         <div class="avatar" onclick="document.getElementById('avatar-upload').click()">
                             <span id="avatar-initial" style="font-size: 28px; font-weight: 800;">U</span>
                             <img id="avatar-img" />
@@ -569,7 +575,6 @@
                 userId = savedId;
                 currentRole = savedRole;
 
-                // If maintenance is on AND user is not admin, show 404 page
                 if (isMaintenance && currentRole !== 'admin') {
                     document.getElementById('maintenance-view').style.display = 'flex';
                     return;
@@ -577,7 +582,6 @@
 
                 showDashboard();
             } else if (isMaintenance) {
-                // If logged out and maintenance is on
                 document.getElementById('maintenance-view').style.display = 'flex';
             }
 
