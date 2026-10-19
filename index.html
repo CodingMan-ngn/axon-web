@@ -243,7 +243,6 @@
         </div>
     </div>
 
-    <!-- Gift Modal -->
     <div class="modal" id="gift-modal">
         <div class="modal-content">
             <div style="font-size: 48px; margin-bottom: 20px;">🎁</div>
@@ -253,7 +252,6 @@
         </div>
     </div>
 
-    <!-- Key Modal -->
     <div class="modal" id="key-modal">
         <div class="modal-content">
             <h2 style="margin-top: 0;">Your Key</h2>
@@ -264,7 +262,6 @@
         </div>
     </div>
 
-    <!-- Floating Key Bar -->
     <div id="key-bar">
         <span style="font-size: 12px; color: var(--text-muted);">Your Key:</span>
         <span class="key-bar-text" id="floating-key"></span>
@@ -364,7 +361,6 @@
         function showKeyModal() {
             document.getElementById('key-text').innerText = currentUser;
             document.getElementById('key-modal').style.display = 'flex';
-            
             document.getElementById('floating-key').innerText = currentUser;
             document.getElementById('key-bar').classList.add('on');
         }
