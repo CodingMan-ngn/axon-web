@@ -551,6 +551,9 @@
             });
             const data = await res.json();
             
+            // Debug log to check exactly what the DB returns
+            console.log("DB Plan Data:", data);
+            
             userActivePlanId = data.active_plan_id;
             lastCompletedPlanId = data.last_completed_plan_id;
             userAdSteps = data.steps || 0;
@@ -569,8 +572,8 @@
                 return;
             }
             availablePlans.forEach(plan => {
-                // Prioritize Active. If no Active plan, fallback to Last Completed.
-                const isActive = (userActivePlanId === plan.id) || (!userActivePlanId && lastCompletedPlanId === plan.id);
+                // Use loose equality (==) to fix SQLite returning numbers as strings
+                const isActive = (userActivePlanId == plan.id) || (!userActivePlanId && lastCompletedPlanId == plan.id);
                 
                 let statusHtml = isActive
                     ? `<div class="status-active">Active</div>`
