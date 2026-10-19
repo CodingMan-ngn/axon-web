@@ -1,1 +1,1192 @@
-Gay
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axon | Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #050505; 
+            --panel: rgba(18, 18, 18, 0.7); 
+            --border: rgba(255, 255, 255, 0.08); 
+            --text: #ffffff; 
+            --text-muted: #888888; 
+            --accent: #4caf50; 
+            --accent-glow: rgba(76, 175, 80, 0.2);
+            --danger: #ef5350; 
+            --danger-glow: rgba(239, 83, 80, 0.2);
+        }
+        
+        [data-theme="light"] { 
+            --bg: #f0f2f5; 
+            --panel: rgba(255, 255, 255, 0.85); 
+            --border: rgba(0, 0, 0, 0.08); 
+            --text: #000000; 
+            --text-muted: #666666; 
+        }
+
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            transition: background 0.3s, color 0.3s; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+        .glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); filter: blur(80px); opacity: 0.4; }
+        .g1 { top: -200px; left: -200px; }
+        .g2 { bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(33, 150, 243, 0.2) 0%, transparent 70%); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--accent-glow); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+        @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        
+        .fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Auth */
+        #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .auth-box { 
+            background: var(--panel); 
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border); 
+            border-radius: 24px; 
+            padding: 40px; 
+            width: 360px; 
+            text-align: center; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .logo-mark { 
+            width: 50px; height: 50px; 
+            background: linear-gradient(135deg, var(--text), #888); 
+            color: var(--bg); 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 28px; font-weight: 900; font-family: monospace; 
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .auth-box h2 { margin: 0 0 25px 0; font-weight: 800; letter-spacing: -0.5px; font-size: 22px; }
+        
+        input { 
+            width: 100%; padding: 14px 16px; margin: 8px 0; 
+            background: rgba(0,0,0,0.2); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 12px; 
+            font-size: 14px; outline: none; 
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        input:focus { border-color: var(--text-muted); box-shadow: 0 0 0 3px rgba(255,255,255,0.05); }
+        
+        .btn { 
+            width: 100%; padding: 14px; 
+            background: var(--text); color: var(--bg); 
+            font-weight: 700; border: none; border-radius: 12px; 
+            cursor: pointer; margin-top: 15px; font-size: 14px; 
+            transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+        
+        .btn-link { background: transparent; color: var(--text-muted); font-size: 13px; margin-top: 20px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-link:hover { color: var(--text); }
+        
+        .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; font-weight: 500; }
+        
+        /* Dashboard Nav */
+        #dashboard-view { display: none; }
+        .nav { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 40px; 
+            border-bottom: 1px solid var(--border); 
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+        .nav-logo .logo-mark { width: 32px; height: 32px; font-size: 18px; margin: 0; }
+        
+        .nav-right { display: flex; gap: 12px; align-items: center; }
+        .pill { 
+            padding: 8px 16px; border-radius: 20px; 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
+            font-size: 12px; color: var(--text-muted); 
+            display: flex; align-items: center; gap: 8px; font-weight: 600;
+            transition: 0.3s;
+        }
+        .pill.active { color: var(--text); border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); }
+        
+        .btn-icon { 
+            background: transparent; border: 1px solid var(--border); color: var(--text); 
+            padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-icon:hover { background: rgba(255,255,255,0.05); }
+        
+        /* Container */
+        .container { max-width: 850px; margin: 50px auto; padding: 0 20px; padding-bottom: 120px; animation: fadeUp 0.5s ease; }
+        
+        h1 { font-size: 42px; margin: 0 0 10px 0; letter-spacing: -1px; font-weight: 800; }
+        h1 span { color: var(--text-muted); }
+        .subtitle { color: var(--text-muted); margin-bottom: 40px; font-size: 16px; font-weight: 400; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 35px; }
+        .tab { padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+        /* Cards */
+        .card { 
+            background: var(--panel); 
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border); 
+            border-radius: 20px; 
+            padding: 35px; 
+            margin-bottom: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+        .card:hover { border-color: rgba(255,255,255,0.12); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .card-title { font-size: 12px; color: var(--text-muted); letter-spacing: 2px; font-weight: 700; text-transform: uppercase; }
+        
+        .badge { 
+            padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; 
+            border: 1px solid; display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.5px;
+        }
+        .badge.empty { background: rgba(255, 183, 77, 0.08); color: #ffb74d; border-color: rgba(255, 183, 77, 0.2); }
+        .badge.time { background: rgba(76, 175, 80, 0.08); color: var(--accent); border-color: rgba(76, 175, 80, 0.2); animation: pulse 2s infinite; }
+        
+        .balance { display: flex; align-items: center; gap: 12px; font-size: 32px; font-weight: 800; color: var(--text); margin-bottom: 25px; letter-spacing: -0.5px; }
+        .balance svg { color: var(--text-muted); }
+        .card-desc { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+        
+        /* Provider Cards */
+        .ad-provider-card { 
+            display: flex; align-items: center; gap: 20px; padding: 20px; 
+            border: 1px solid var(--border); border-radius: 16px; 
+            background: rgba(0,0,0,0.2); margin-bottom: 12px; 
+            cursor: pointer; transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ad-provider-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .ad-provider-card.locked { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        
+        .ad-icon { 
+            width: 54px; height: 54px; border-radius: 14px; 
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .ad-info { flex: 1; }
+        .ad-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+        .ad-badge { background: var(--text); color: var(--bg); font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; letter-spacing: 0.5px; }
+        .ad-desc { font-size: 13px; color: var(--text-muted); }
+        .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+        
+        /* Profile */
+        .avatar { 
+            width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center; 
+            border: 2px solid var(--border); cursor: pointer; transition: 0.2s; flex-shrink: 0;
+        }
+        .avatar:hover { border-color: var(--text-muted); }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        /* Admin */
+        .admin-input { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; }
+        .admin-input:focus { border-color: var(--text-muted); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        td { font-weight: 500; }
+        
+        /* Modals */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); 
+            display: none; align-items: center; justify-content: center; z-index: 1000; 
+        }
+        .modal-content { 
+            background: var(--panel); border: 1px solid var(--border); 
+            padding: 40px; border-radius: 24px; width: 420px; text-align: center; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-content h2 { margin: 0 0 15px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .modal-content p { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
+        
+        .gw-list { text-align: left; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; font-size: 14px; line-height: 1.8; }
+        .gw-list div { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        
+        .countdown-timer { display: flex; gap: 12px; justify-content: center; margin: 25px 0; }
+        .time-block { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; padding: 15px 20px; min-width: 75px; }
+        .time-block span { display: block; font-size: 34px; font-weight: 900; font-family: monospace; color: var(--text); letter-spacing: -1px; }
+        .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; font-weight: 700; }
+
+        /* Key Bar */
+        #key-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--panel); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 20px; display: none; justify-content: center; align-items: center; gap: 20px;
+            z-index: 500; box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        #key-bar.on { display: flex; }
+        
+        .key-bar-text { 
+            font-family: monospace; font-size: 18px; font-weight: 700; 
+            padding: 10px 20px; border-radius: 10px; border: 1px solid; letter-spacing: 1px; 
+            transition: 0.3s;
+        }
+        
+        .key-bar-text.active { 
+            color: var(--accent); 
+            background: rgba(76, 175, 80, 0.1); 
+            border-color: rgba(76, 175, 80, 0.3); 
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        
+        .key-bar-text.inactive { 
+            color: var(--danger); 
+            background: rgba(239, 83, 80, 0.1); 
+            border-color: rgba(239, 83, 80, 0.3); 
+            box-shadow: 0 0 15px var(--danger-glow);
+        }
+        
+        #toast-container { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { 
+            background: var(--panel); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 16px 28px; 
+            border-radius: 14px; color: var(--text); font-weight: 600; font-size: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-danger:hover { background: rgba(239, 83, 80, 0.2); }
+        .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-warn:hover { background: rgba(255, 183, 77, 0.2); }
+        .btn-green { background: rgba(76, 175, 80, 0.1); color: var(--accent); border: 1px solid rgba(76, 175, 80, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-green:hover { background: rgba(76, 175, 80, 0.2); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* Maintenance 404 */
+        #maintenance-view {
+            position: fixed; inset: 0; background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px);
+            display: none; align-items: center; justify-content: center; z-index: 10000;
+        }
+        .maintenance-box {
+            text-align: center; max-width: 500px; padding: 40px;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 24px;
+        }
+        .maintenance-box h1 { font-size: 64px; margin: 0; color: var(--text); letter-spacing: -2px; }
+        .maintenance-box p { color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-top: 10px; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="ambient"><div class="glow g1"></div><div class="glow g2"></div></div>
+    <div id="toast-container"></div>
+
+    <!-- MAINTENANCE OVERLAY -->
+    <div id="maintenance-view">
+        <div class="maintenance-box">
+            <h1>404</h1>
+            <p>Site is under maintenance. Please check back later.<br>If you need immediate assistance, contact us on Discord.</p>
+            <button class="btn" style="margin-top: 20px;" onclick="window.location.reload()">Refresh</button>
+        </div>
+    </div>
+
+    <div id="auth-view">
+        <div class="stat-bar"><div class="dot"></div> <span id="active-users">0</span> Active Keys</div>
+        <div class="logo-mark">A</div>
+        
+        <div class="auth-box">
+            <h2 id="auth-title">Welcome Back</h2>
+            <input id="username" type="text" placeholder="Username" autocomplete="off" />
+            <input id="password" type="password" placeholder="Password" autocomplete="off" />
+            <button class="btn" onclick="submitAuth()" id="auth-btn">Sign In</button>
+            <div class="error-msg" id="auth-error"></div>
+            <button class="btn-link" onclick="toggleAuth()" id="toggle-btn">Don't have an account? Sign up</button>
+        </div>
+    </div>
+
+    <div id="dashboard-view">
+        <div class="nav">
+            <div class="nav-logo">
+                <div class="logo-mark">A</div>
+                <span>AXON</span>
+            </div>
+            <div class="nav-right">
+                <button class="btn-icon" onclick="toggleTheme()">Theme</button>
+                <div class="pill" id="time-pill">loading...</div>
+                <div class="pill active"><div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></div> <span id="user-display">User</span></div>
+                <button class="btn-icon" onclick="logout()" style="color: var(--danger); border-color: rgba(239, 83, 80, 0.3);">Logout</button>
+            </div>
+        </div>
+
+        <div class="container fade-up">
+            <h1>Hey, <span id="hero-name">User</span></h1>
+            <p class="subtitle">Manage your access and explore ways to earn more time.</p>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('home')">Overview</div>
+                <div class="tab" onclick="switchTab('profile')">Profile</div>
+                <div class="tab hidden" id="admin-tab" onclick="switchTab('admin')">Admin</div>
+            </div>
+
+            <div id="tab-home">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Your Balance</div>
+                        <div class="badge empty" id="balance-badge">Inactive</div>
+                    </div>
+                    <div class="balance">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span id="balance-time">0m</span>
+                    </div>
+                    <p class="card-desc">Earn Windows time by completing quick tasks below. Your key is available in the floating bar.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Available Providers</div>
+                    </div>
+                    <p class="card-desc" style="margin-bottom: 25px;">Select a plan to start earning. Complete all required checkpoints to unlock your time.</p>
+                    <div id="plans-list"></div>
+                </div>
+            </div>
+
+            <div id="tab-profile" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Account Settings</div>
+                    </div>
+                    <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 30px;">
+                        <div class="avatar" onclick="document.getElementById('avatar-upload').click()">
+                            <span id="avatar-initial" style="font-size: 28px; font-weight: 800;">U</span>
+                            <img id="avatar-img" />
+                            <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" />
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 20px; letter-spacing: -0.5px;" id="profile-name">Username</div>
+                            <div style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Click avatar to upload image</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn" style="width: auto; margin: 0; background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="openModal('change-pass-modal')">Change Password</button>
+                        <button class="btn btn-warn" style="width: auto; margin: 0;" onclick="resetMyHWID()">Reset HWID</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-admin" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title" style="color: var(--danger);">Site Management</div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 700; font-size: 15px;">Maintenance Mode</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;">Toggles the entire site on/off for users.</div>
+                        </div>
+                        <button class="btn" id="maintenance-toggle-btn" style="width: auto; margin: 0; padding: 8px 24px;" onclick="toggleMaintenance()">...</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title" style="color: var(--danger);">Create Plan</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <input class="admin-input" id="plan-name" type="text" placeholder="Plan Name (e.g. Quick Boost)" />
+                        <div style="display: flex; gap: 12px;">
+                            <input class="admin-input" id="plan-gateways" type="number" placeholder="Gateways" />
+                            <input class="admin-input" id="plan-days" type="number" placeholder="Days" />
+                            <button class="btn" style="width: auto; margin: 0;" onclick="createPlan()">Create</button>
+                        </div>
+                    </div>
+                    <div id="admin-plans-list" style="margin-top: 25px;"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Manage Users</div>
+                    </div>
+                    <input class="admin-input" id="admin-search" type="text" placeholder="Search by Username or ID..." oninput="filterUsers()" style="margin-bottom: 20px;" />
+                    <table id="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Time</th>
+                                <th>Give</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-user-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="change-pass-modal">
+        <div class="modal-content">
+            <h2>Change Password</h2>
+            <input class="admin-input" id="old-pass" type="password" placeholder="Current Password" />
+            <input class="admin-input" id="new-pass" type="password" placeholder="New Password" />
+            <div style="display: flex; gap: 12px; margin-top: 25px;">
+                <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="closeModal('change-pass-modal')">Cancel</button>
+                <button class="btn" onclick="changePassword()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="gateway-modal">
+        <div class="modal-content">
+            <h2>Before You Start</h2>
+            <p>You will be redirected to our provider. Please read carefully:</p>
+            <div class="gw-list">
+                <div>✅ <b>Do:</b> Complete the task fully.</div>
+                <div>❌ <b>Do Not:</b> Close early or use VPN/Proxy.</div>
+                <div>❌ <b>Do Not:</b> Use AdBlockers.</div>
+                <div>⚠️ <b>Warning:</b> Bots/bypasses will result in a revoked key.</div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="closeModal('gateway-modal')">Cancel</button>
+                <button class="btn" id="confirm-gateway-btn" onclick="confirmStartPlan()">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="countdown-modal" class="modal">
+        <div class="modal-content">
+            <h2>Time Added!</h2>
+            <p>Your account has been credited successfully.</p>
+            <div class="countdown-timer">
+                <div class="time-block"><span id="cd-days">0</span><label>Days</label></div>
+                <div class="time-block"><span id="cd-hours">0</span><label>Hours</label></div>
+                <div class="time-block"><span id="cd-mins">0</span><label>Mins</label></div>
+                <div class="time-block"><span id="cd-secs">0</span><label>Secs</label></div>
+            </div>
+            <button class="btn" onclick="closeCountdown()">Awesome</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gift-modal">
+        <div class="modal-content">
+            <div style="font-size: 48px; margin-bottom: 20px;">🎁</div>
+            <h2>Gift Received</h2>
+            <p id="gift-text">You have been gifted time by the Admin.</p>
+            <button class="btn" onclick="dismissGift()">Claim</button>
+        </div>
+    </div>
+
+    <div class="modal" id="key-modal">
+        <div class="modal-content">
+            <h2>Your Key</h2>
+            <p>Copy this key and paste it into the Axon injector.</p>
+            <div class="key-bar-text" id="key-text" style="margin-bottom: 25px;"></div>
+            <button class="btn" onclick="copyKey()">Copy Key</button>
+            <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px;" onclick="closeModal('key-modal')">Close</button>
+        </div>
+    </div>
+
+    <div id="key-bar">
+        <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Your Key:</span>
+        <span class="key-bar-text" id="floating-key"></span>
+        <button class="btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="copyKey()">Copy</button>
+    </div>
+
+    <script>
+        const API_URL = 'https://axon-api.l26064135.workers.dev';
+        let currentUser = '';
+        let licenseKey = ''; 
+        let userId = ''; 
+        let currentRole = 'user';
+        let isLogin = true;
+        let allUsers = [];
+        let countdownInterval = null;
+        let availablePlans = [];
+        let userActivePlanId = null;
+        let userAdSteps = 0;
+        let pendingPlanId = null;
+        let isMaintenance = false;
+
+        document.getElementById('auth-title').innerText = 'Welcome Back';
+        document.getElementById('auth-btn').innerText = 'Sign In';
+        document.getElementById('toggle-btn').innerText = "Don't have an account? Sign up";
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        window.onload = async () => {
+            fetch(API_URL + '/stats').then(r => r.json()).then(d => {
+                document.getElementById('active-users').innerText = d.active || 0;
+            }).catch(() => {});
+
+            // Check maintenance status FIRST
+            try {
+                const mRes = await fetch(API_URL + '/admin/status');
+                const mData = await mRes.json();
+                isMaintenance = mData.maintenance;
+            } catch(e) {}
+
+            const savedUser = localStorage.getItem('axon_user');
+            const savedKey = localStorage.getItem('axon_key');
+            const savedId = localStorage.getItem('axon_id');
+            const savedRole = localStorage.getItem('axon_role');
+
+            if (savedUser && savedKey && savedId && savedRole) {
+                currentUser = savedUser;
+                licenseKey = savedKey;
+                userId = savedId;
+                currentRole = savedRole;
+
+                // If maintenance is on AND user is not admin, show 404 page
+                if (isMaintenance && currentRole !== 'admin') {
+                    document.getElementById('maintenance-view').style.display = 'flex';
+                    return;
+                }
+
+                showDashboard();
+            } else if (isMaintenance) {
+                // If logged out and maintenance is on
+                document.getElementById('maintenance-view').style.display = 'flex';
+            }
+
+            const params = new URLSearchParams(window.location.search);
+
+            if (params.get('success') === 'ad_finished') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Time added successfully!');
+                    showCountdownPopup(1);
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'step_completed') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Gateway completed! Finish the remaining steps to get your time.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'error_session') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Error: Session expired or invalid. Please start the ad again.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'already_had_plan') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Nice one, but you already had an active plan so no time for you rn.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            }
+        };
+
+        function showKeyModal() {
+            document.getElementById('key-text').innerText = licenseKey;
+            document.getElementById('key-modal').style.display = 'flex';
+            document.getElementById('floating-key').innerText = licenseKey;
+            document.getElementById('key-bar').classList.add('on');
+        }
+
+        function copyKey() {
+            navigator.clipboard.writeText(licenseKey);
+            showToast('Key copied to clipboard!');
+        }
+
+        function checkGiftNotification(giftText) {
+            if (giftText) {
+                document.getElementById('gift-text').innerText = giftText;
+                document.getElementById('gift-modal').style.display = 'flex';
+            }
+        }
+
+        async function dismissGift() {
+            document.getElementById('gift-modal').style.display = 'none';
+            await fetch(API_URL + '/user/clear-gift', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+        }
+
+        function showCountdownPopup(addedDays = 1) {
+            document.getElementById('countdown-modal').style.display = 'flex';
+            
+            let target = new Date();
+            target.setDate(target.getDate() + addedDays);
+            
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const diff = target - now;
+                if (diff <= 0) {
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                document.getElementById('cd-days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+                document.getElementById('cd-hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('cd-mins').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('cd-secs').innerText = Math.floor((diff % (1000 * 60)) / 1000);
+            }, 1000);
+        }
+
+        function closeCountdown() {
+            document.getElementById('countdown-modal').style.display = 'none';
+            if (countdownInterval) clearInterval(countdownInterval);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#tab-home, #tab-profile, #tab-admin').forEach(t => t.classList.add('hidden'));
+            
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            event.target.classList.add('active');
+
+            if (tab === 'admin') {
+                loadAdminUsers();
+                loadMaintenanceStatus();
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+        }
+
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? 'Welcome Back' : 'Create Account';
+            document.getElementById('toggle-btn').innerText = isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in";
+            document.getElementById('auth-btn').innerText = isLogin ? 'Sign In' : 'Sign Up';
+            document.getElementById('auth-error').innerText = '';
+        }
+
+        async function submitAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errBox = document.getElementById('auth-error');
+            const btn = document.getElementById('auth-btn');
+            errBox.innerText = '';
+            errBox.style.color = 'var(--danger)';
+
+            if (!user || !pass) {
+                errBox.innerText = 'Please fill in all fields.';
+                return;
+            }
+
+            const originalText = btn.innerText;
+            btn.innerText = 'Processing...';
+            btn.disabled = true;
+
+            const endpoint = isLogin ? '/login' : '/register';
+            try {
+                const res = await fetch(API_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    errBox.innerText = data.error;
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                if (isLogin) {
+                    currentUser = data.username;
+                    licenseKey = data.key;
+                    userId = data.user_id;
+                    currentRole = data.role;
+                    localStorage.setItem('axon_user', currentUser);
+                    localStorage.setItem('axon_key', licenseKey);
+                    localStorage.setItem('axon_id', userId);
+                    localStorage.setItem('axon_role', currentRole);
+                    showDashboard();
+                } else {
+                    errBox.style.color = 'var(--accent)';
+                    errBox.innerText = 'Account created! Please login.';
+                    setTimeout(() => toggleAuth(), 1500);
+                }
+            } catch (e) {
+                errBox.innerText = 'Network error. Please try again.';
+            }
+            
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+
+        function logout() {
+            localStorage.removeItem('axon_user');
+            localStorage.removeItem('axon_key');
+            localStorage.removeItem('axon_id');
+            localStorage.removeItem('axon_role');
+            window.location.reload();
+        }
+
+        async function showDashboard() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            
+            document.getElementById('user-display').innerText = currentUser;
+            document.getElementById('hero-name').innerText = currentUser;
+            document.getElementById('profile-name').innerText = currentUser;
+            document.getElementById('avatar-initial').innerText = currentUser.charAt(0).toUpperCase();
+
+            if (currentRole === 'admin') {
+                document.getElementById('admin-tab').classList.remove('hidden');
+            }
+
+            const savedAvatar = localStorage.getItem('axon_avatar');
+            if (savedAvatar) {
+                document.getElementById('avatar-initial').style.display = 'none';
+                const img = document.getElementById('avatar-img');
+                img.src = savedAvatar;
+                img.style.display = 'block';
+            }
+
+            await loadUserPlanStatus();
+            refreshTime();
+        }
+
+        async function loadUserPlanStatus() {
+            const res = await fetch(API_URL + '/user/plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser }) 
+            });
+            const data = await res.json();
+            userActivePlanId = data.active_plan_id;
+            userAdSteps = data.steps || 0;
+
+            const plansRes = await fetch(API_URL + '/plans');
+            const plansData = await plansRes.json();
+            
+            if (plansData.maintenance) {
+                document.getElementById('maintenance-view').style.display = 'flex';
+                return;
+            }
+
+            availablePlans = plansData.plans || [];
+            renderPlans();
+        }
+
+        function renderPlans() {
+            const container = document.getElementById('plans-list');
+            container.innerHTML = '';
+            
+            if (availablePlans.length === 0) {
+                container.innerHTML = `<p class="card-desc" style="text-align: center; padding: 20px;">No ad plans available yet. Please check back later.</p>`;
+                return;
+            }
+
+            availablePlans.forEach(plan => {
+                const isActive = userActivePlanId === plan.id;
+                const isLocked = userActivePlanId && userActivePlanId !== plan.id;
+                
+                let progress = '';
+                if (isActive) {
+                    progress = `<div class="ad-progress">Progress: ${userAdSteps} / ${plan.gateway_count}</div>`;
+                }
+
+                const cardClass = isLocked ? 'ad-provider-card locked' : 'ad-provider-card';
+                const onClick = isLocked ? '' : `onclick="startPlan(${plan.id})"`;
+
+                container.innerHTML += `
+                    <div class="${cardClass}" ${onClick}>
+                        <div class="ad-icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        </div>
+                        <div class="ad-info">
+                            <div class="ad-title">${plan.name} <span class="ad-badge">${plan.gateway_count} checkpoints</span></div>
+                            <div class="ad-desc">Complete ${plan.gateway_count} quick tasks. When done, you get ${plan.days_rewarded} days.</div>
+                            ${progress}
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 24px;">›</div>
+                    </div>
+                `;
+            });
+        }
+
+        function startPlan(planId) {
+            pendingPlanId = planId;
+            openModal('gateway-modal');
+        }
+
+        async function confirmStartPlan() {
+            closeModal('gateway-modal');
+            if (!pendingPlanId) return;
+
+            showToast('Generating secure gateway...');
+
+            const res = await fetch(API_URL + '/user/start-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, plan_id: pendingPlanId }) 
+            });
+            const data = await res.json();
+            
+            pendingPlanId = null;
+            if (data.error) return showToast(data.error);
+
+            window.location.href = data.url;
+        }
+
+        async function refreshTime() {
+            const res = await fetch(API_URL + '/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: licenseKey, hwid: 'web-browser' }) 
+            });
+            const data = await res.json();
+            
+            if (!data.valid) {
+                if (data.reason === 'Deleted') {
+                    showToast('You have been deleted for compromise. Create a new account and contact us on Discord.');
+                    localStorage.removeItem('axon_user');
+                    localStorage.removeItem('axon_key');
+                    localStorage.removeItem('axon_id');
+                    localStorage.removeItem('axon_role');
+                    setTimeout(() => window.location.reload(), 4000);
+                    return;
+                }
+                if (data.reason === 'Maintenance') {
+                    document.getElementById('maintenance-view').style.display = 'flex';
+                    return;
+                }
+            }
+
+            const timePill = document.getElementById('time-pill');
+            const badge = document.getElementById('balance-badge');
+            const balanceTime = document.getElementById('balance-time');
+            const floatingKey = document.getElementById('floating-key');
+            const keyBar = document.getElementById('key-bar');
+
+            if (data.expires && new Date(data.expires) > new Date()) {
+                const expires = new Date(data.expires);
+                const now = new Date();
+                const diffMs = expires - now;
+                
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                
+                if (days > 0) {
+                    timePill.innerText = `${days}d ${hours}h`;
+                    balanceTime.innerText = `${days}d ${hours}h ${mins}m`;
+                } else {
+                    timePill.innerText = `${hours}h ${mins}m`;
+                    balanceTime.innerText = `${hours}h ${mins}m`;
+                }
+                
+                badge.className = 'badge time';
+                badge.innerText = 'Active';
+
+                floatingKey.innerText = licenseKey;
+                floatingKey.className = 'key-bar-text active'; // GREEN
+                keyBar.classList.add('on');
+
+            } else {
+                timePill.innerText = 'No Time';
+                badge.className = 'badge empty';
+                badge.innerText = 'Inactive';
+                balanceTime.innerText = '0m';
+
+                floatingKey.innerText = licenseKey;
+                floatingKey.className = 'key-bar-text inactive'; // RED
+                keyBar.classList.add('on');
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        async function changePassword() {
+            const oldPass = document.getElementById('old-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            if (!oldPass || !newPass) return showToast('Fill fields');
+
+            const res = await fetch(API_URL + '/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, oldPass, newPass })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Password changed!');
+                closeModal('change-pass-modal');
+            } else {
+                showToast(data.error);
+            }
+        }
+
+        async function resetMyHWID() {
+            if (!confirm('Resetting HWID will unbind your key from this PC so you can use it on a new one. You can only do this once every 48 hours. Continue?')) return;
+
+            const res = await fetch(API_URL + '/user/reset-hwid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('HWID reset! You can now log in on a new PC.');
+            } else {
+                showToast(data.error);
+            }
+        }
+
+        // --- Admin Logic ---
+        async function toggleMaintenance() {
+            const newStatus = !isMaintenance;
+            const res = await fetch(API_URL + '/admin/toggle-maintenance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maintenance: newStatus })
+            });
+            if (res.ok) {
+                isMaintenance = newStatus;
+                updateMaintenanceUI();
+                showToast(newStatus ? 'Site is now OFFLINE' : 'Site is now ONLINE');
+            }
+        }
+
+        function updateMaintenanceUI() {
+            const btn = document.getElementById('maintenance-toggle-btn');
+            if (isMaintenance) {
+                btn.innerText = 'OFFLINE (Click to Enable)';
+                btn.style.background = 'var(--danger)';
+                btn.style.color = '#fff';
+                btn.style.border = 'none';
+            } else {
+                btn.innerText = 'ONLINE (Click to Disable)';
+                btn.style.background = 'var(--accent)';
+                btn.style.color = '#fff';
+                btn.style.border = 'none';
+            }
+        }
+
+        async function loadMaintenanceStatus() {
+            try {
+                const res = await fetch(API_URL + '/admin/status');
+                const data = await res.json();
+                isMaintenance = data.maintenance;
+                updateMaintenanceUI();
+            } catch(e){}
+        }
+
+        async function createPlan() {
+            const name = document.getElementById('plan-name').value;
+            const gateways = document.getElementById('plan-gateways').value;
+            const days = document.getElementById('plan-days').value;
+            if (!name || !gateways || !days) return showToast('Fill all fields');
+
+            const res = await fetch(API_URL + '/admin/create-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, gateways: parseInt(gateways), days: parseInt(days) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Plan created!');
+                loadAdminUsers();
+            }
+        }
+
+        async function editPlan(id, currentGateways) {
+            const newGates = prompt("Enter new number of gateways for this plan:", currentGateways);
+            if (!newGates || isNaN(newGates)) return;
+
+            const res = await fetch(API_URL + '/admin/edit-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, gateways: parseInt(newGates) })
+            });
+            if (res.ok) {
+                showToast('Plan updated!');
+                loadAdminUsers();
+            }
+        }
+
+        async function deletePlan(id) {
+            if (!confirm('Delete this plan?')) return;
+            await fetch(API_URL + '/admin/delete-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            loadAdminUsers();
+        }
+
+        async function loadAdminUsers() {
+            const res = await fetch(API_URL + '/admin/users');
+            const data = await res.json();
+            allUsers = data.users || [];
+            renderAdminTable(allUsers);
+
+            const plansRes = await fetch(API_URL + '/plans');
+            const plansData = await plansRes.json();
+            const adminPlans = document.getElementById('admin-plans-list');
+            adminPlans.innerHTML = '';
+            plansData.plans.forEach(p => {
+                adminPlans.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                        <span style="font-weight: 500;">${p.name} <span style="color: var(--text-muted); font-size: 12px;">(${p.gateway_count} steps · ${p.days_rewarded} days)</span></span>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-warn btn-sm" onclick="editPlan(${p.id}, ${p.gateway_count})">Edit</button>
+                            <button class="btn-danger btn-sm" onclick="deletePlan(${p.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('admin-search').value.toLowerCase();
+            const filtered = allUsers.filter(u => u.username.toLowerCase().includes(query) || (u.user_id && u.user_id.toLowerCase().includes(query)));
+            renderAdminTable(filtered);
+        }
+
+        function renderAdminTable(users) {
+            const tbody = document.getElementById('admin-user-list');
+            tbody.innerHTML = '';
+            
+            users.forEach(u => {
+                const expires = u.expires_at ? new Date(u.expires_at) : null;
+                const timeLeft = expires && expires > new Date() 
+                    ? Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)) + ' days'
+                    : 'Expired';
+
+                let roleColor = u.role === 'admin' ? 'var(--accent)' : 'var(--text-muted)';
+                let roleButton = '';
+                
+                if (u.username !== 'invisibleadmin') {
+                    if (u.role === 'admin') {
+                        roleButton = `<button class="btn-danger btn-sm" onclick="toggleRole('${u.user_id}', 'user')">Demote</button>`;
+                    } else {
+                        roleButton = `<button class="btn-green btn-sm" onclick="toggleRole('${u.user_id}', 'admin')">Promote</button>`;
+                    }
+                } else {
+                    roleButton = `<span style="font-size:12px; color:var(--text-muted);">-</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color: var(--accent); font-family: monospace; font-weight: 600;">${u.user_id || 'N/A'}</td>
+                        <td style="font-weight: 600;">${u.username}</td>
+                        <td style="color: ${roleColor}; font-weight: 700; font-size: 12px; letter-spacing: 0.5px;">${u.role.toUpperCase()}</td>
+                        <td style="color: var(--text-muted);">${timeLeft}</td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <input id="days-${u.user_id}" type="number" placeholder="Days" style="width: 60px; margin: 0; padding: 6px; font-size: 12px; border-radius: 6px;" class="admin-input" />
+                                <button class="btn btn-sm" style="width: auto; margin: 0;" onclick="giveUserTime('${u.user_id}')">Give</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn-warn btn-sm" onclick="resetHWID('${u.user_id}')">HWID</button>
+                                ${roleButton}
+                                <button class="btn-danger btn-sm" onclick="removeUser('${u.user_id}')">X</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function giveUserTime(user_id) {
+            const days = document.getElementById(`days-${user_id}`).value;
+            if (!days) return;
+            const res = await fetch(API_URL + '/admin/give-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user_id, days: parseInt(days) })
+            });
+            if (res.ok) { showToast(`Time given to ${user_id}`); loadAdminUsers(); }
+        }
+
+        async function toggleRole(user_id, newRole) {
+            if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+            const res = await fetch(API_URL + '/admin/toggle-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user_id, role: newRole })
+            });
+            if (res.ok) {
+                showToast(`Role updated to ${newRole}`);
+                loadAdminUsers();
+            }
+        }
+
+        async function removeUser(user_id) {
+            if (!confirm(`Are you sure you want to remove ${user_id}?`)) return;
+            await fetch(API_URL + '/admin/remove-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user_id })
+            });
+            loadAdminUsers();
+        }
+
+        async function resetHWID(user_id) {
+            await fetch(API_URL + '/admin/reset-hwid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user_id })
+            });
+            showToast(`HWID reset for ${user_id}`);
+            loadAdminUsers();
+        }
+
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const b64 = e.target.result;
+                localStorage.setItem('axon_avatar', b64);
+                document.getElementById('avatar-initial').style.display = 'none';
+                const img = document.getElementById('avatar-img');
+                img.src = b64;
+                img.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
