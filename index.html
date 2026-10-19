@@ -261,6 +261,17 @@
             display: none !important;
         }
 
+        /* BLUR REVEAL LOGIC */
+        .secret-blur {
+            filter: blur(6px);
+            transition: filter 0.2s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .secret-blur:hover {
+            filter: blur(0);
+        }
+        
         #tab-profile .btn, #tab-profile .btn-warn {
             margin: 0 auto;
         }
@@ -459,6 +470,18 @@
                         <div>
                             <div style="font-weight: 800; font-size: 24px; letter-spacing: -0.5px;" id="profile-name">Username</div>
                             <div style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">Click avatar to upload image</div>
+                        </div>
+                    </div>
+                    
+                    <!-- BLUR REVEAL SECTION -->
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;">
+                        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 15px 25px; border-radius: 12px; flex: 1; max-width: 250px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">User ID</div>
+                            <div class="secret-blur" id="profile-id" style="font-family: monospace; font-size: 16px; font-weight: 700; color: var(--text);">LOADING...</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 15px 25px; border-radius: 12px; flex: 1; max-width: 250px;">
+                            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Permanent Key</div>
+                            <div class="secret-blur" id="profile-key" style="font-family: monospace; font-size: 16px; font-weight: 700; color: var(--accent);">LOADING...</div>
                         </div>
                     </div>
                     
@@ -836,6 +859,10 @@
             document.getElementById('hero-name').innerText = currentUser;
             document.getElementById('profile-name').innerText = currentUser;
             document.getElementById('avatar-initial').innerText = currentUser.charAt(0).toUpperCase();
+
+            // NEW: Populate blur reveal fields
+            document.getElementById('profile-id').innerText = userId;
+            document.getElementById('profile-key').innerText = licenseKey;
 
             if (currentRole === 'admin') {
                 document.getElementById('admin-tab').classList.remove('hidden');
