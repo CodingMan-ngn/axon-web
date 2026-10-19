@@ -551,7 +551,6 @@
             });
             const data = await res.json();
             
-            // FIX: Store BOTH active plan AND the last completed plan returned from the DB
             userActivePlanId = data.active_plan_id;
             lastCompletedPlanId = data.last_completed_plan_id;
             userAdSteps = data.steps || 0;
@@ -570,8 +569,8 @@
                 return;
             }
             availablePlans.forEach(plan => {
-                // Check if active OR if it was the last completed plan saved in the DB
-                const isActive = (userActivePlanId === plan.id) || (lastCompletedPlanId === plan.id);
+                // Prioritize Active. If no Active plan, fallback to Last Completed.
+                const isActive = (userActivePlanId === plan.id) || (!userActivePlanId && lastCompletedPlanId === plan.id);
                 
                 let statusHtml = isActive
                     ? `<div class="status-active">Active</div>`
