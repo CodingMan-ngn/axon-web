@@ -338,12 +338,6 @@
         let isMaintenance = false;
         let statsInterval = null;
 
-        // --- FIX: Capture the URL parameter BEFORE the dashboard draws ---
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'ad_finished' && urlParams.get('plan')) {
-            lastCompletedPlanId = parseInt(urlParams.get('plan'));
-        }
-
         function showToast(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -394,8 +388,9 @@
                 document.getElementById('maintenance-view').style.display = 'flex';
             }
 
-            // Handle toasts for the URL params without interfering with the render logic
-            if (urlParams.get('success') === 'ad_finished') {
+            const params = new URLSearchParams(window.location.search);
+            
+            if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) { 
                     showToast('Time added successfully!'); 
@@ -403,13 +398,13 @@
                     refreshTime(); 
                     loadUserPlanStatus(); 
                 }
-            } else if (urlParams.get('success') === 'step_completed') {
+            } else if (params.get('success') === 'step_completed') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) { showToast('Gateway completed! Finish the remaining steps.'); refreshTime(); loadUserPlanStatus(); }
-            } else if (urlParams.get('success') === 'error_session') {
+            } else if (params.get('success') === 'error_session') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) { showToast('Session expired. Please start again.'); refreshTime(); loadUserPlanStatus(); }
-            } else if (urlParams.get('success') === 'already_had_plan') {
+            } else if (params.get('success') === 'already_had_plan') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) { showToast('You already had an active plan — no time added.'); refreshTime(); loadUserPlanStatus(); }
             }
@@ -556,8 +551,9 @@
             });
             const data = await res.json();
             
-            // Combine DB status with the captured URL parameter
-            userActivePlanId = data.active_plan_id || lastCompletedPlanId;
+            // FIX: Store BOTH active plan AND the last completed plan returned from the DB
+            userActivePlanId = data.active_plan_id;
+            lastCompletedPlanId = data.last_completed_plan_id;
             userAdSteps = data.steps || 0;
             
             const plansRes = await fetch(API_URL + '/plans');
@@ -574,7 +570,7 @@
                 return;
             }
             availablePlans.forEach(plan => {
-                // If it's in the DB OR just finished, show as Active
+                // Check if active OR if it was the last completed plan saved in the DB
                 const isActive = (userActivePlanId === plan.id) || (lastCompletedPlanId === plan.id);
                 
                 let statusHtml = isActive
