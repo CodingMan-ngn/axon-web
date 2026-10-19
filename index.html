@@ -39,13 +39,11 @@
             overflow-x: hidden;
         }
 
-        /* Ambient Background */
         .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
         .glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); filter: blur(80px); opacity: 0.4; }
         .g1 { top: -200px; left: -200px; }
         .g2 { bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(33, 150, 243, 0.2) 0%, transparent 70%); }
 
-        /* Animations */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--accent-glow); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -53,7 +51,6 @@
         
         .fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Auth View */
         #auth-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
         .auth-box { 
             background: var(--panel); 
@@ -105,7 +102,6 @@
         
         .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; font-weight: 500; }
         
-        /* Dashboard Nav */
         #dashboard-view { display: none; }
         .nav { 
             display: flex; justify-content: space-between; align-items: center; 
@@ -135,7 +131,6 @@
         }
         .btn-icon:hover { background: rgba(255,255,255,0.05); }
         
-        /* Container & Tabs */
         .container { max-width: 850px; margin: 50px auto; padding: 0 20px; padding-bottom: 120px; animation: fadeUp 0.5s ease; }
         
         h1 { font-size: 42px; margin: 0 0 10px 0; letter-spacing: -1px; font-weight: 800; }
@@ -147,7 +142,6 @@
         .tab:hover { color: var(--text); }
         .tab.active { color: var(--text); border-bottom-color: var(--text); }
 
-        /* Cards */
         .card { 
             background: var(--panel); 
             backdrop-filter: blur(10px);
@@ -174,7 +168,6 @@
         .balance svg { color: var(--text-muted); }
         .card-desc { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
         
-        /* Plan Cards */
         .ad-provider-card { 
             display: flex; align-items: center; gap: 20px; padding: 20px; 
             border: 1px solid var(--border); border-radius: 16px; 
@@ -195,7 +188,6 @@
         .ad-desc { font-size: 13px; color: var(--text-muted); }
         .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
         
-        /* Profile */
         .avatar { 
             width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.05); 
             overflow: hidden; display: flex; align-items: center; justify-content: center; 
@@ -204,17 +196,14 @@
         .avatar:hover { border-color: var(--text-muted); }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Inputs (Admin) */
         .admin-input { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; }
         .admin-input:focus { border-color: var(--text-muted); }
         
-        /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
         th { color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         td { font-weight: 500; }
         
-        /* Modals */
         .modal { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); 
             display: none; align-items: center; justify-content: center; z-index: 1000; 
@@ -228,17 +217,14 @@
         .modal-content h2 { margin: 0 0 15px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
         .modal-content p { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
         
-        /* Gateway Instructions */
         .gw-list { text-align: left; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; font-size: 14px; line-height: 1.8; }
         .gw-list div { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         
-        /* Countdown */
         .countdown-timer { display: flex; gap: 12px; justify-content: center; margin: 25px 0; }
         .time-block { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; padding: 15px 20px; min-width: 75px; }
         .time-block span { display: block; font-size: 34px; font-weight: 900; font-family: monospace; color: var(--text); letter-spacing: -1px; }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; font-weight: 700; }
 
-        /* Floating Key Bar */
         #key-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--panel); backdrop-filter: blur(20px);
@@ -250,7 +236,6 @@
         #key-bar.on { display: flex; }
         .key-bar-text { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--accent); background: rgba(76, 175, 80, 0.1); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.2); letter-spacing: 1px; }
         
-        /* Toasts */
         #toast-container { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { 
             background: var(--panel); backdrop-filter: blur(20px);
@@ -262,7 +247,6 @@
         
         .hidden { display: none !important; }
         
-        /* Buttons */
         .btn-danger { background: rgba(239, 83, 80, 0.1); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
         .btn-danger:hover { background: rgba(239, 83, 80, 0.2); }
         .btn-warn { background: rgba(255, 183, 77, 0.1); color: #ffb74d; border: 1px solid rgba(255, 183, 77, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
@@ -271,7 +255,6 @@
         .btn-green:hover { background: rgba(76, 175, 80, 0.2); }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -540,6 +523,13 @@
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
                     showToast('Error: Session expired or invalid. Please start the ad again.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'already_had_plan') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Nice one, but you already had an active plan so no time for you rn.');
                     refreshTime(); 
                     loadUserPlanStatus();
                 }
