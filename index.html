@@ -330,7 +330,7 @@
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    showToast('Verifying ad completion... (up to 10s)');
+                    showToast('Verifying ad completion...');
                     
                     fetch(API_URL + '/reward/claim', {
                         method: 'POST',
@@ -354,9 +354,6 @@
                     })
                     .catch(() => showToast('Failed to verify ad. Please try again.'));
                 }
-            } else if (params.get('success') === 'error_user_not_found') {
-                window.history.replaceState({}, document.title, "/");
-                showToast('Error: Session expired. Please try again.');
             }
         };
 
