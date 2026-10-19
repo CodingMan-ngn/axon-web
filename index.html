@@ -219,6 +219,7 @@
         }
         
         .avatar { 
+            position: relative;
             width: 120px; 
             height: 120px; 
             border-radius: 50%; 
@@ -240,6 +241,9 @@
         }
         
         .avatar img { 
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
@@ -250,6 +254,11 @@
             font-size: 48px; 
             font-weight: 800;
             color: var(--text);
+            z-index: 2;
+        }
+
+        .avatar input[type="file"] {
+            display: none !important;
         }
 
         #tab-profile .btn, #tab-profile .btn-warn {
@@ -435,11 +444,18 @@
                     </div>
                     
                     <div class="profile-layout">
+                        <!-- The Avatar Container -->
                         <div class="avatar" onclick="document.getElementById('avatar-upload').click()">
                             <span id="avatar-initial">U</span>
                             <img id="avatar-img" />
                             <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" />
+                            
+                            <!-- Hover overlay -->
+                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; z-index: 3;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            </div>
                         </div>
+                        
                         <div>
                             <div style="font-weight: 800; font-size: 24px; letter-spacing: -0.5px;" id="profile-name">Username</div>
                             <div style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">Click avatar to upload image</div>
