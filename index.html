@@ -297,7 +297,7 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-                window.onload = async () => {
+        window.onload = async () => {
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
                 document.getElementById('active-users').innerText = d.active || 0;
             }).catch(() => {});
@@ -317,33 +317,22 @@
 
             const params = new URLSearchParams(window.location.search);
 
-            // 1. HANDLE SUCCESS (Hold the popup and prevent reload errors)
             if (params.get('success') === 'ad_finished') {
-                // Clear the URL immediately so a refresh doesn't trigger an error
                 window.history.replaceState({}, document.title, "/");
-                
                 if (currentUser) {
                     showToast('Time added successfully!');
                     showCountdownPopup(1);
-                    
-                    // Wait for dashboard to load data before showing time
-                    setTimeout(() => {
-                        refreshTime(); 
-                        loadUserPlanStatus();
-                    }, 500);
+                    refreshTime(); 
+                    loadUserPlanStatus();
                 }
-            } 
-            // 2. HANDLE STEP COMPLETED (Do not show error on refresh)
-            else if (params.get('success') === 'step_completed') {
+            } else if (params.get('success') === 'step_completed') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
                     showToast('Gateway completed! Finish the remaining steps to get your time.');
                     refreshTime(); 
                     loadUserPlanStatus();
                 }
-            } 
-            // 3. HANDLE ERROR
-            else if (params.get('success') === 'error_session') {
+            } else if (params.get('success') === 'error_session') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
                     showToast('Error: Session expired or invalid. Please start the ad again.');
