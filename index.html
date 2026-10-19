@@ -88,7 +88,6 @@
         .time-block { background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:14px; padding:15px 20px; min-width:75px; }
         .time-block span { display:block; font-size:34px; font-weight:900; font-family:monospace; color:var(--text); letter-spacing:-1px; }
         .time-block label { font-size:10px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-top:5px; display:block; font-weight:700; }
-        #key-bar { display:none !important; }
         #toast-container { position:fixed; top:30px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
         .toast { background:var(--panel); backdrop-filter:blur(20px); border:1px solid var(--border); padding:16px 28px; border-radius:14px; color:var(--text); font-weight:600; font-size:14px; box-shadow:0 10px 30px rgba(0,0,0,.5); animation: slideDown .3s cubic-bezier(.16,1,.3,1); pointer-events:auto; }
         .hidden { display:none !important; }
@@ -325,14 +324,15 @@
     <script>
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
-        let licenseKey = '';
-        let userId = '';
+        let licenseKey = ''; 
+        let userId = ''; 
         let currentRole = 'user';
         let isLogin = true;
         let allUsers = [];
         let countdownInterval = null;
         let availablePlans = [];
         let userActivePlanId = null;
+        let lastCompletedPlanId = null;
         let userAdSteps = 0;
         let pendingPlanId = null;
         let isMaintenance = false;
@@ -389,9 +389,17 @@
             }
 
             const params = new URLSearchParams(window.location.search);
+            
             if (params.get('success') === 'ad_finished') {
+                // Capture the plan ID the Worker passed
+                lastCompletedPlanId = parseInt(params.get('plan'));
                 window.history.replaceState({}, document.title, "/");
-                if (currentUser) { showToast('Time added successfully!'); showCountdownPopup(1); refreshTime(); loadUserPlanStatus(); }
+                if (currentUser) { 
+                    showToast('Time added successfully!'); 
+                    showCountdownPopup(1, licenseKey);
+                    refreshTime(); 
+                    loadUserPlanStatus(); 
+                }
             } else if (params.get('success') === 'step_completed') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) { showToast('Gateway completed! Finish the remaining steps.'); refreshTime(); loadUserPlanStatus(); }
@@ -424,8 +432,22 @@
             });
         }
 
-        function showCountdownPopup(addedDays = 1) {
+        function showCountdownPopup(addedDays = 1, keyToShow = '') {
             document.getElementById('countdown-modal').style.display = 'flex';
+            
+            const modalContent = document.querySelector('#countdown-modal .modal-content');
+            let keyDisplay = document.getElementById('popup-key-display');
+            if (!keyDisplay) {
+                keyDisplay = document.createElement('div');
+                keyDisplay.id = 'popup-key-display';
+                keyDisplay.style = "background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin: 15px 0; font-family: monospace; font-size: 16px; color: var(--accent); cursor: pointer;";
+                keyDisplay.onclick = () => copyText(keyToShow, 'Key');
+                keyDisplay.title = "Click to copy";
+                modalContent.insertBefore(keyDisplay, modalContent.querySelector('.countdown-timer'));
+            }
+            keyDisplay.innerText = keyToShow || licenseKey;
+            keyDisplay.style.display = keyToShow || licenseKey ? 'block' : 'none';
+
             let target = new Date();
             target.setDate(target.getDate() + addedDays);
             if (countdownInterval) clearInterval(countdownInterval);
@@ -530,8 +552,10 @@
                 body: JSON.stringify({ username: currentUser })
             });
             const data = await res.json();
-            userActivePlanId = data.active_plan_id;
+            
+            userActivePlanId = data.active_plan_id || lastCompletedPlanId;
             userAdSteps = data.steps || 0;
+            
             const plansRes = await fetch(API_URL + '/plans');
             const plansData = await plansRes.json();
             availablePlans = plansData.plans || [];
@@ -546,10 +570,12 @@
                 return;
             }
             availablePlans.forEach(plan => {
-                const isActive = userActivePlanId === plan.id;
-                const statusHtml = isActive
+                const isActive = (userActivePlanId === plan.id) || (lastCompletedPlanId === plan.id);
+                
+                let statusHtml = isActive
                     ? `<div class="status-active">Active</div>`
                     : `<div class="status-inactive">Inactive</div>`;
+                    
                 container.innerHTML += `
                     <div class="ad-provider-card" onclick="startPlan(${plan.id})">
                         <div class="ad-icon">
