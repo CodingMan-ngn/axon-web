@@ -273,7 +273,7 @@
         const API_URL = 'https://axon-api.l26064135.workers.dev';
         let currentUser = '';
         let licenseKey = ''; 
-        let userId = ''; // NEW: User ID
+        let userId = ''; 
         let currentRole = 'user';
         let isLogin = true;
         let allUsers = [];
@@ -339,7 +339,6 @@
                             if (res.ok) {
                                 if (data.plan_completed) {
                                     showToast('Time added successfully!');
-                                    // NEW: Set exact added days to popup
                                     const addedDays = data.added_days || 1;
                                     showCountdownPopup(addedDays);
                                 } else {
@@ -397,7 +396,6 @@
         function showCountdownPopup(addedDays = 1) {
             document.getElementById('countdown-modal').style.display = 'flex';
             
-            // Set the countdown to the exact added days
             let target = new Date();
             target.setDate(target.getDate() + addedDays);
             
@@ -498,7 +496,6 @@
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
-            // Set clean username
             document.getElementById('user-display').innerText = currentUser;
             document.getElementById('hero-name').innerText = currentUser;
             document.getElementById('profile-name').innerText = currentUser;
@@ -606,7 +603,6 @@
                 const now = new Date();
                 const diffMs = expires - now;
                 
-                // Round up to fix the "2 days" vs "1 day" mismatch
                 const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -686,6 +682,21 @@
             }
         }
 
+        async function editPlan(id, currentGateways) {
+            const newGates = prompt("Enter new number of gateways for this plan:", currentGateways);
+            if (!newGates || isNaN(newGates)) return;
+
+            const res = await fetch(API_URL + '/admin/edit-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, gateways: parseInt(newGates) })
+            });
+            if (res.ok) {
+                showToast('Plan updated!');
+                loadAdminUsers();
+            }
+        }
+
         async function deletePlan(id) {
             if (!confirm('Delete this plan?')) return;
             await fetch(API_URL + '/admin/delete-plan', {
@@ -708,9 +719,12 @@
             adminPlans.innerHTML = '';
             plansData.plans.forEach(p => {
                 adminPlans.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0; border-bottom: 1px solid var(--border);">
                         <span>${p.name} (${p.gateway_count} steps · ${p.days_rewarded} days)</span>
-                        <button class="btn-danger" onclick="deletePlan(${p.id})">Delete</button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-warn" style="font-size:11px; padding:4px 8px;" onclick="editPlan(${p.id}, ${p.gateway_count})">Edit</button>
+                            <button class="btn-danger" style="font-size:11px; padding:4px 8px;" onclick="deletePlan(${p.id})">Delete</button>
+                        </div>
                     </div>
                 `;
             });
