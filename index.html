@@ -293,7 +293,7 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        window.onload = async () => {
+             window.onload = async () => {
             fetch(API_URL + '/stats').then(r => r.json()).then(d => {
                 document.getElementById('active-users').innerText = d.active || 0;
             }).catch(() => {});
@@ -310,13 +310,41 @@
             }
 
             const params = new URLSearchParams(window.location.search);
+            
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    showToast('Time added successfully!');
-                    refreshTime(); 
-                    loadUserPlanStatus();
-                    showCountdownPopup();
+                    showToast('Verifying ad completion...');
+                    
+                    // Ask the worker if the whole plan is done
+                    fetch(API_URL + '/reward/claim', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: currentUser })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.error) {
+                            showToast('Error: ' + data.error);
+                            refreshTime(); 
+                            loadUserPlanStatus();
+                        } else if (data.plan_completed) {
+                            // Whole plan is done! Show the popup and the time
+                            showToast('Time added successfully!');
+                            showCountdownPopup();
+                            refreshTime(); 
+                            loadUserPlanStatus();
+                        } else {
+                            // Only one step done. No popup.
+                            showToast('Gateway completed! Finish the remaining steps to get your time.');
+                            refreshTime(); 
+                            loadUserPlanStatus();
+                        }
+                    })
+                    .catch(() => {
+                        refreshTime(); 
+                        loadUserPlanStatus();
+                    });
                 }
             }
         };
