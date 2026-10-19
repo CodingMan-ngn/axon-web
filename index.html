@@ -320,50 +320,24 @@
             if (params.get('success') === 'ad_finished') {
                 window.history.replaceState({}, document.title, "/");
                 if (currentUser) {
-                    showToast('Verifying ad completion...');
-                    
-                    const attemptClaim = async (tries = 0) => {
-                        if (tries > 20) {
-                            showToast('Error: Ad verification timed out. Please refresh and try again.');
-                            loadUserPlanStatus();
-                            refreshTime();
-                            return;
-                        }
-
-                        try {
-                            const res = await fetch(API_URL + '/reward/claim', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ username: currentUser })
-                            });
-                            const data = await res.json();
-
-                            if (res.ok) {
-                                if (data.plan_completed) {
-                                    showToast('Time added successfully!');
-                                    const addedDays = data.added_days || 1;
-                                    showCountdownPopup(addedDays);
-                                } else {
-                                    showToast('Gateway completed! Finish the remaining steps to get your time.');
-                                }
-                                refreshTime(); 
-                                loadUserPlanStatus();
-                            } else {
-                                // Checks exactly for 'not_verified' to keep looping
-                                if (data.error === 'not_verified') {
-                                    setTimeout(() => attemptClaim(tries + 1), 1500);
-                                } else {
-                                    showToast('Error: ' + (data.error || 'Verification failed'));
-                                    refreshTime(); 
-                                    loadUserPlanStatus();
-                                }
-                            }
-                        } catch (e) {
-                            setTimeout(() => attemptClaim(tries + 1), 1500);
-                        }
-                    };
-
-                    attemptClaim();
+                    showToast('Time added successfully!');
+                    showCountdownPopup(1);
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'step_completed') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Gateway completed! Finish the remaining steps to get your time.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
+                }
+            } else if (params.get('success') === 'error_session') {
+                window.history.replaceState({}, document.title, "/");
+                if (currentUser) {
+                    showToast('Error: Session expired or invalid. Please start the ad again.');
+                    refreshTime(); 
+                    loadUserPlanStatus();
                 }
             }
         };
