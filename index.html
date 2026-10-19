@@ -307,35 +307,9 @@
         .time-block span { display: block; font-size: 34px; font-weight: 900; font-family: monospace; color: var(--text); letter-spacing: -1px; }
         .time-block label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; display: block; font-weight: 700; }
 
-        /* Key Bar */
+        /* Key Bar - HIDDEN NOW */
         #key-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--panel); backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border);
-            padding: 20px; display: none; justify-content: center; align-items: center; gap: 20px;
-            z-index: 500; box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-            animation: slideDown 0.3s ease;
-        }
-        #key-bar.on { display: flex; }
-        
-        .key-bar-text { 
-            font-family: monospace; font-size: 18px; font-weight: 700; 
-            padding: 10px 20px; border-radius: 10px; border: 1px solid; letter-spacing: 1px; 
-            transition: 0.3s;
-        }
-        
-        .key-bar-text.active { 
-            color: var(--accent); 
-            background: rgba(76, 175, 80, 0.1); 
-            border-color: rgba(76, 175, 80, 0.3); 
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-        
-        .key-bar-text.inactive { 
-            color: var(--danger); 
-            background: rgba(239, 83, 80, 0.1); 
-            border-color: rgba(239, 83, 80, 0.3); 
-            box-shadow: 0 0 15px var(--danger-glow);
+            display: none !important;
         }
         
         #toast-container { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
@@ -436,7 +410,7 @@
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                         <span id="balance-time">0m</span>
                     </div>
-                    <p class="card-desc">Earn Windows time by completing quick tasks below. Your key is available in the floating bar.</p>
+                    <p class="card-desc">Earn Windows time by completing quick tasks below. Your key is available in the Profile tab.</p>
                 </div>
 
                 <div class="card">
@@ -604,12 +578,6 @@
             <button class="btn" onclick="copyKey()">Copy Key</button>
             <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px;" onclick="closeModal('key-modal')">Close</button>
         </div>
-    </div>
-
-    <div id="key-bar">
-        <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Your Key:</span>
-        <span class="key-bar-text" id="floating-key"></span>
-        <button class="btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="copyKey()">Copy</button>
     </div>
 
     <script>
@@ -860,7 +828,7 @@
             document.getElementById('profile-name').innerText = currentUser;
             document.getElementById('avatar-initial').innerText = currentUser.charAt(0).toUpperCase();
 
-            // NEW: Populate blur reveal fields
+            // Populate blur reveal fields
             document.getElementById('profile-id').innerText = userId;
             document.getElementById('profile-key').innerText = licenseKey;
 
@@ -914,7 +882,6 @@
             availablePlans.forEach(plan => {
                 const isActive = userActivePlanId === plan.id;
                 
-                // NEW LOGIC: Show Active or Inactive instead of progress
                 let statusHtml = '';
                 if (isActive) {
                     statusHtml = `<div class="status-active">Active</div>`;
@@ -992,8 +959,6 @@
             const timePill = document.getElementById('time-pill');
             const badge = document.getElementById('balance-badge');
             const balanceTime = document.getElementById('balance-time');
-            const floatingKey = document.getElementById('floating-key');
-            const keyBar = document.getElementById('key-bar');
 
             if (data.expires && new Date(data.expires) > new Date()) {
                 const expires = new Date(data.expires);
@@ -1015,19 +980,11 @@
                 badge.className = 'badge time';
                 badge.innerText = 'Active';
 
-                floatingKey.innerText = licenseKey;
-                floatingKey.className = 'key-bar-text active'; // GREEN
-                keyBar.classList.add('on');
-
             } else {
                 timePill.innerText = 'No Time';
                 badge.className = 'badge empty';
                 badge.innerText = 'Inactive';
                 balanceTime.innerText = '0m';
-
-                floatingKey.innerText = licenseKey;
-                floatingKey.className = 'key-bar-text inactive'; // RED
-                keyBar.classList.add('on');
             }
         }
 
