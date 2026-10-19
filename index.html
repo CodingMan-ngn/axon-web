@@ -193,7 +193,18 @@
         .ad-desc { font-size: 13px; color: var(--text-muted); }
         .ad-progress { font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
         
-        /* Profile Centering Fix */
+        /* Profile Centering */
+        #tab-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        #tab-profile .card {
+            width: 100%;
+            max-width: 600px;
+        }
+        
         .profile-layout { 
             display: flex; 
             align-items: center; 
