@@ -265,6 +265,26 @@
         </div>
     </div>
 
+    <!-- NEW: Gateway Instructions Modal -->
+    <div class="modal" id="gateway-modal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0;">Before You Start</h2>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                You are about to be redirected to our ad provider. Please read the following carefully:
+            </p>
+            <div style="text-align: left; background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; margin-bottom: 20px;">
+                <div style="margin-bottom: 8px;">✅ <b>Do:</b> Complete the task fully.</div>
+                <div style="margin-bottom: 8px;">❌ <b>Do Not:</b> Close the tab early or use a VPN/Proxy.</div>
+                <div style="margin-bottom: 8px;">❌ <b>Do Not:</b> Use AdBlockers during the ad.</div>
+                <div>⚠️ <b>Warning:</b> Using bots or bypassing the ad will result in your key being revoked.</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text);" onclick="closeModal('gateway-modal')">Cancel</button>
+                <button class="btn" id="confirm-gateway-btn" onclick="confirmStartPlan()">I Understand, Start</button>
+            </div>
+        </div>
+    </div>
+
     <div id="key-bar">
         <span style="font-size: 12px; color: var(--text-muted);">Your Key:</span>
         <span class="key-bar-text" id="floating-key"></span>
@@ -283,6 +303,7 @@
         let availablePlans = [];
         let userActivePlanId = null;
         let userAdSteps = 0;
+        let pendingPlanId = null;
 
         document.getElementById('auth-title').innerText = 'Login to Axon';
         document.getElementById('auth-btn').innerText = 'Login';
@@ -548,16 +569,25 @@
             });
         }
 
-        async function startPlan(planId) {
+        function startPlan(planId) {
+            pendingPlanId = planId;
+            openModal('gateway-modal');
+        }
+
+        async function confirmStartPlan() {
+            closeModal('gateway-modal');
+            if (!pendingPlanId) return;
+
             showToast('Generating secure gateway...');
 
             const res = await fetch(API_URL + '/user/start-plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, plan_id: planId }) 
+                body: JSON.stringify({ username: currentUser, plan_id: pendingPlanId }) 
             });
             const data = await res.json();
             
+            pendingPlanId = null;
             if (data.error) return showToast(data.error);
 
             window.location.href = data.url;
@@ -571,6 +601,19 @@
             });
             const data = await res.json();
             
+            if (!data.valid) {
+                if (data.reason === 'Deleted') {
+                    // FIX: The deleted for compromise warning
+                    showToast('You have been deleted for compromise. Create a new account and contact us on Discord.');
+                    localStorage.removeItem('axon_user');
+                    localStorage.removeItem('axon_key');
+                    localStorage.removeItem('axon_id');
+                    localStorage.removeItem('axon_role');
+                    setTimeout(() => window.location.reload(), 4000);
+                    return;
+                }
+            }
+
             const timePill = document.getElementById('time-pill');
             const badge = document.getElementById('balance-badge');
             const balanceTime = document.getElementById('balance-time');
